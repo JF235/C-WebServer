@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Date: Wed Oct 04 01:13:11 2023 BRT
+Server: JFCM Server 0.1
+Connection: keep-alive
+Last-Modified: Sun Sep 10 23:11:33 2023 BRT
+Content-Length: 152
+Content-Type: text/html
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TEXTO1.HTML</title>
+    </head>
+    <body>
+        Conteúdo do texto1.html
+    </body>
+</html>
