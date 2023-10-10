@@ -5,8 +5,6 @@
 char *logFileName;
 #endif
 
-#define loop while (1)
-
 int main(int argc, char **argv)
 {
     struct sockaddr_in cliente;
@@ -39,11 +37,13 @@ int main(int argc, char **argv)
             perror("Erro em accept()");
             exit(EXIT_FAILURE);
         }
+        printf("Alguém conectou (%d)\n", newSock);
 
         // Uma vez que a conexão foi aceita, processa a conexão.
         processConnection(newSock);
 
         shutdown(newSock, SHUT_RDWR);
+        printf("Desconectou (%d)\n", newSock);
 
     } // END LOOP
 

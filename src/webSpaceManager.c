@@ -147,7 +147,7 @@ void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_
     {
     case 200: // OK
         // Requisição atendida
-        printHeader(response, resourceInfo.httpCode, resourceInfo.resourcePath, req);
+        printHeader(response, resourceInfo.resourcePath, req);
         if (req == HTTP_GET)
         {
             printResource(response, resourceInfo.resourcePath);
@@ -155,13 +155,13 @@ void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_
         break;
     case 404: // NOT FOUND
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
-            printHeader(response, resourceInfo.httpCode, ".", req);
+            printHeader(response, ".", req);
         else
             printErrorHeader(response, resourceInfo.httpCode);
         break;
     case 403: // FORBIDENN
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
-            printHeader(response, resourceInfo.httpCode, ".", req);
+            printHeader(response, ".", req);
         else
             printErrorHeader(response, resourceInfo.httpCode);
         break;
@@ -171,7 +171,7 @@ void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_
     }
 }
 
-void printHeader(char buffer[MAX_BUFFER_SIZE], http_code code, const char *resourcePath, http_request req)
+void printHeader(char buffer[MAX_BUFFER_SIZE], const char *resourcePath, http_request req)
 {
     // Obter a data atual.
     time_t now;

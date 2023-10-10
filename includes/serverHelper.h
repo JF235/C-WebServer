@@ -3,9 +3,9 @@
 
 #include "essentials.h"
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 2048
 
-void processConnection(int newSock);
+int processConnection(int newSock);
 
 /*
 Cria um soquete e atribui o endereço de IP local com a porta

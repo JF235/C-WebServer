@@ -14,11 +14,12 @@ Processa uma conexão estabelecida no novo socket `newSock`.
 - Responde a requisição com `respondeRequest`
 - Por fim, exibe uma mensagem de confirmação.
 */
-void processConnection(int newSock)
+int processConnection(int newSock)
 {
     char request[MAX_BUFFER_SIZE];
 
-    readRequest(newSock, request);
+    int status = (int)readRequest(newSock, request);
+    if (status == 0) return status;
 
     parseRequest(request);
 
@@ -27,6 +28,8 @@ void processConnection(int newSock)
     freeCommandList(cmdList);
 
     printf("%s - Mensagem enviada com sucesso (%ld bytes).\n", getHttpStatusText(req.httpCode), req.bytes);
+
+    return status;
 }
 
 int createAndBind(unsigned short port)
@@ -58,14 +61,19 @@ int createAndBind(unsigned short port)
 
 ssize_t readRequest(int newSock, char *request)
 {
+    printf("Efetuando leitura... ");
+    // Flush é necessário, pois read é uma chamada bloqueante
+    fflush(stdout);
+    
     ssize_t bytes_received = read(newSock, request, MAX_BUFFER_SIZE);
+    printf("Leitura concluída\n");
 
-    if (bytes_received <= 0)
+    if (bytes_received < 0)
     {
-        if (bytes_received == 0)
-            printf("b=0\n");
         perror("Erro ao receber dados");
         exit(EXIT_FAILURE);
+    } else if (bytes_received == 0){
+        return 0;
     }
     request[bytes_received] = '\0';
 

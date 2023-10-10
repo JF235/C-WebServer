@@ -48,7 +48,7 @@ webResource checkWebResource(const char *resource);
 /* 
 Imprime o header de uma resposta associado ao código `code`, recurso `resourcePath` e requisição do tipo `req`.
 */
-void printHeader(char *response, http_code code, const char *resourcePath, http_request req);
+void printHeader(char *response, const char *resourcePath, http_request req);
 
 /* 
 Imprime o header de um erro associado ao código `code`.

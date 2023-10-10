@@ -499,7 +499,8 @@ char *yytext;
     #include "parserBison.tab.h"
 #line 501 "parserFlex.yy.c"
 
-#line 503 "parserFlex.yy.c"
+#define YY_NO_INPUT 1
+#line 504 "parserFlex.yy.c"
 
 #define INITIAL 0
 #define options 1
@@ -560,8 +561,6 @@ extern int yywrap ( void );
 #endif
 
 #ifndef YY_NO_UNPUT
-    
-    static void yyunput ( int c, char *buf_ptr  );
     
 #endif
 
@@ -720,10 +719,10 @@ YY_DECL
 		}
 
 	{
-#line 15 "parserFlex.l"
+#line 18 "parserFlex.l"
 
 
-#line 727 "parserFlex.yy.c"
+#line 726 "parserFlex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -783,56 +782,56 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 17 "parserFlex.l"
+#line 20 "parserFlex.l"
 {;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 18 "parserFlex.l"
+#line 21 "parserFlex.l"
 {;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 19 "parserFlex.l"
+#line 22 "parserFlex.l"
 {yylval.str = strdup(yytext);return WORD;}  
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 20 "parserFlex.l"
+#line 23 "parserFlex.l"
 {yylval.str = strdup(yytext);return HTTP_METHOD;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 21 "parserFlex.l"
+#line 24 "parserFlex.l"
 {yylval.str = strdup(yytext);return WORD;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 22 "parserFlex.l"
+#line 25 "parserFlex.l"
 {yylval.str = strdup(yytext);return WORD;}
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 23 "parserFlex.l"
+#line 26 "parserFlex.l"
 {BEGIN(0);return '\n';}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 24 "parserFlex.l"
+#line 27 "parserFlex.l"
 {return COMMA;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 25 "parserFlex.l"
+#line 28 "parserFlex.l"
 {BEGIN(options);return COLONS;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 27 "parserFlex.l"
+#line 30 "parserFlex.l"
 ECHO;
 	YY_BREAK
-#line 836 "parserFlex.yy.c"
+#line 835 "parserFlex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(options):
 	yyterminate();
@@ -1169,43 +1168,6 @@ static int yy_get_next_buffer (void)
 }
 
 #ifndef YY_NO_UNPUT
-
-    static void yyunput (int c, char * yy_bp )
-{
-	char *yy_cp;
-    
-    yy_cp = (yy_c_buf_p);
-
-	/* undo effects of setting up yytext */
-	*yy_cp = (yy_hold_char);
-
-	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-		{ /* need to shift things up to make room */
-		/* +2 for EOB chars. */
-		int number_to_move = (yy_n_chars) + 2;
-		char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-		char *source =
-				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-
-		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-			*--dest = *--source;
-
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
-		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = (int) YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-
-		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-		}
-
-	*--yy_cp = (char) c;
-
-	(yytext_ptr) = yy_bp;
-	(yy_hold_char) = *yy_cp;
-	(yy_c_buf_p) = yy_cp;
-}
 
 #endif
 
@@ -1841,6 +1803,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 27 "parserFlex.l"
+#line 30 "parserFlex.l"
 
 

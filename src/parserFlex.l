@@ -4,6 +4,9 @@
 
 %s options
 
+%option nounput
+%option noinput 
+
 word                [^:,\r\n \t]+
 special_word        [^, \r\n\t][^,\r\n\t]+[^, \r\n\t]
 comentario          ^#.*

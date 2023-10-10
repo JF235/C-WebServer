@@ -3,8 +3,10 @@
 
 #include "essentials.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #define LOG 0
+
+#define loop while (1)
 
 extern FILE *yyin;
 int yylex();
