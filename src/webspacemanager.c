@@ -1,15 +1,4 @@
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <time.h>
-#include "../includes/webspacemanager.h"
-#include "../includes/httpHelper.h"
+#include "../includes/essentials.h"
 
 webResource httpRequest(char *webPath, char *resource, char *reqText)
 {

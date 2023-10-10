@@ -1,13 +1,7 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <unistd.h>
-    #include <fcntl.h>
-    #include "../includes/parser_data_structure.h"
-    #include "../includes/webspacemanager.h"
-    #include "../includes/httpHelper.h"
-    #include "../includes/main.h"
+    #include "../includes/essentials.h"
+
+    extern CommandList *cmdList;
 %}
 
 %union {

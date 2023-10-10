@@ -1,8 +1,7 @@
 #ifndef WEBSPACEMANAGER_H
 #define WEBSPACEMANAGER_H
 
-#include <sys/stat.h>
-#include <stdbool.h>
+#include "essentials.h"
 
 #define MAX_PATH_SIZE 512
 #define HTTP_OK 200
@@ -37,13 +36,15 @@ typedef int http_request;
 
 /*
 webResource:
-- `resourcePath` caminho do recurso.
-- `httpCode` código HTTP de acesso ao recurso.
+- `resourcePath` caminho do recurso resolvido.
+- `httpCode` código de status HTTP da resposta.
+- `bytes` número de bytes enviados em resposta.
 */
 typedef struct webResource
 {
     char resourcePath[MAX_PATH_SIZE + 16];
     http_request httpCode;
+    ssize_t bytes;
 } webResource;
 
 /*

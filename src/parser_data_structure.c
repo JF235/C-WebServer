@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../includes/parser_data_structure.h"
+#include "../includes/essentials.h"
 
 ////////////////////////////////////////////////
 // Options

@@ -1,5 +1,4 @@
-#include "../includes/webspacemanager.h"
-#include <string.h>
+#include "../includes/essentials.h"
 
 char* getHttpStatusText(http_code code){
     switch (code)

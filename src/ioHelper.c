@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "../includes/ioHelper.h"
+#include "../includes/essentials.h"
 
 void fileName2stdout(char *filename){
     // Abre o arquivo de requisição para leitura.

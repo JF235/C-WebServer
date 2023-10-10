@@ -1,7 +1,7 @@
 #ifndef IOHELPER_H
 #define IOHELPER_H
 
-#include <stdio.h>
+#include "essentials.h"
 
 /*
 Imprime o conteúdo do arquivo de nome `filename` na saída padrão.

@@ -60,7 +60,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 13 "parser_bison.y"
+#line 7 "parser_bison.y"
 
     char* str;
     struct OptionList *optionList;

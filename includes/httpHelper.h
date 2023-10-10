@@ -1,7 +1,7 @@
 #ifndef HTTPHELPER_H
 #define HTTPHELPER_H
 
-#include "webspacemanager.h"
+#include "essentials.h"
 
 /*
 Transforma um código de resposta http em uma string com:

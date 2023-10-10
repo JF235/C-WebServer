@@ -1,10 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "../includes/parser_data_structure.h"
-#include <stdio.h>
-
-struct CommandList *cmdList;
+#include "essentials.h"
 
 extern FILE *yyin;
 
