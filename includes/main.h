@@ -3,8 +3,10 @@
 
 #include "essentials.h"
 
-extern FILE *yyin;
+#define DEBUG 1
+#define LOG 0
 
+extern FILE *yyin;
 int yylex();
 void yyerror(const char* s);
 int yylex_destroy(void);

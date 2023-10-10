@@ -1,6 +1,7 @@
 #include "../includes/essentials.h"
 
-void fileName2stdout(char *filename){
+void fileName2stdout(char *filename)
+{
     // Abre o arquivo de requisição para leitura.
     FILE *arquivo_requisicao = fopen(filename, "r");
     if (arquivo_requisicao == NULL)
@@ -11,7 +12,8 @@ void fileName2stdout(char *filename){
     fclose(arquivo_requisicao);
 }
 
-void file2stdout(FILE *file){
+void file2stdout(FILE *file)
+{
     // Imprime o conteúdo da requisição na tela.
     char caractere;
     while ((caractere = fgetc(file)) != EOF)
@@ -50,5 +52,29 @@ void fileName2buffer(char *filename, char *buff)
     fclose(file);
 }
 
+void buffer2fileName(char *buffer, char *filename, size_t bufferSize)
+{
+    // Abra o arquivo para escrita em modo binário
+    int fd = open(filename, 2);
 
-    
+    // Verifique se o arquivo foi aberto com sucesso
+    if (fd == -1)
+    {
+        perror("Erro ao abrir o arquivo");
+        exit(EXIT_FAILURE);
+    }
+
+    // Escreva o conteúdo do buffer no arquivo
+    size_t bytesEscritos = write(fd, buffer, bufferSize);
+
+    // Verifique se ocorreu um erro ao escrever
+    if (bytesEscritos != bufferSize)
+    {
+        perror("Erro ao escrever no arquivo");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+
+    // Feche o arquivo após a escrita
+    close(fd);
+}

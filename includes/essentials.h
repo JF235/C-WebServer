@@ -19,11 +19,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "webspacemanager.h" // Precisa estar acima de httpHelper
-#include "httpHelper.h"
+#include "httpHelper.h" // Precisa estar acima de webSpaceManager
+#include "webSpaceManager.h" 
 #include "ioHelper.h"
 #include "main.h"
-#include "parser_data_structure.h"
+#include "cmdLinkedList.h"
 #include "serverHelper.h"
 
 #endif

@@ -4,9 +4,11 @@
 // Options
 ////////////////////////////////////////////////
 
-OptionList* createOptionList() {
-    OptionList *optionList = (OptionList*)malloc(sizeof(OptionList));
-    if (optionList == NULL) {
+OptionList *createOptionList()
+{
+    OptionList *optionList = (OptionList *)malloc(sizeof(OptionList));
+    if (optionList == NULL)
+    {
         perror("Erro ao alocar memória para a lista de opções");
         exit(EXIT_FAILURE);
     }
@@ -15,9 +17,11 @@ OptionList* createOptionList() {
     return optionList;
 }
 
-void addOption(OptionList *optionList, char *optionName) {
-    Option *newOption = (Option*)malloc(sizeof(Option));
-    if (newOption == NULL) {
+void addOption(OptionList *optionList, char *optionName)
+{
+    Option *newOption = (Option *)malloc(sizeof(Option));
+    if (newOption == NULL)
+    {
         perror("Erro ao alocar memória para a opção");
         exit(EXIT_FAILURE);
     }
@@ -35,15 +39,20 @@ void addOption(OptionList *optionList, char *optionName) {
     optionList->tail = newOption;
 }
 
-void printOptionList(OptionList *optionList) {
+void printOptionList(OptionList *optionList)
+{
     Option *currentOption = optionList->head;
     int first = 1;
     printf("<");
-    while (currentOption != NULL) {
-        if (first){
+    while (currentOption != NULL)
+    {
+        if (first)
+        {
             printf("\"%s\"", currentOption->optionName);
-            first=0;
-        } else {
+            first = 0;
+        }
+        else
+        {
             printf(",\"%s\"", currentOption->optionName);
         }
         currentOption = currentOption->nextOption;
@@ -51,9 +60,11 @@ void printOptionList(OptionList *optionList) {
     printf(">");
 }
 
-void freeOptionList(OptionList *optionList) {
+void freeOptionList(OptionList *optionList)
+{
     Option *currentOption = optionList->head;
-    while (currentOption != NULL) {
+    while (currentOption != NULL)
+    {
         Option *tempOption = currentOption;
         currentOption = currentOption->nextOption;
         free(tempOption);
@@ -64,9 +75,11 @@ void freeOptionList(OptionList *optionList) {
 // Commands
 ////////////////////////////////////////////////
 
-CommandList* createCommandList() {
-    CommandList *commandList = (CommandList*)malloc(sizeof(CommandList));
-    if (commandList == NULL) {
+CommandList *createCommandList()
+{
+    CommandList *commandList = (CommandList *)malloc(sizeof(CommandList));
+    if (commandList == NULL)
+    {
         perror("Erro ao alocar memória para a lista de comandos");
         exit(EXIT_FAILURE);
     }
@@ -74,14 +87,16 @@ CommandList* createCommandList() {
     return commandList;
 }
 
-void addCommand(CommandList *commandList, char *commandName) {
-    Command *newCommand = (Command*)malloc(sizeof(Command));
-    if (newCommand == NULL) {
+void addCommand(CommandList *commandList, char *commandName)
+{
+    Command *newCommand = (Command *)malloc(sizeof(Command));
+    if (newCommand == NULL)
+    {
         perror("Erro ao alocar memória para o comando");
         exit(EXIT_FAILURE);
     }
     strcpy(newCommand->commandName, commandName);
-    
+
     newCommand->optionList.head = NULL;
     newCommand->optionList.tail = NULL;
 
@@ -100,9 +115,11 @@ void addCommand(CommandList *commandList, char *commandName) {
     // commandList->head = newCommand;
 }
 
-void printCommandList(CommandList *commandList) {
+void printCommandList(CommandList *commandList)
+{
     Command *currentCommand = commandList->head;
-    while (currentCommand != NULL) {
+    while (currentCommand != NULL)
+    {
         printf("Comando: %s\n", currentCommand->commandName);
         printf("\tOpções: ");
         printOptionList(&(currentCommand->optionList));
@@ -111,9 +128,11 @@ void printCommandList(CommandList *commandList) {
     }
 }
 
-void freeCommandList(CommandList *commandList) {
+void freeCommandList(CommandList *commandList)
+{
     Command *currentCommand = commandList->head;
-    while (currentCommand != NULL) {
+    while (currentCommand != NULL)
+    {
         Command *tempCommand = currentCommand;
         currentCommand = currentCommand->nextCommand;
         freeOptionList(&(tempCommand->optionList));

@@ -66,13 +66,13 @@
 
 
 /* First part of user prologue.  */
-#line 1 "parser_bison.y"
+#line 1 "parserBison.y"
 
     #include "../includes/essentials.h"
 
     extern CommandList *cmdList;
 
-#line 76 "parser_bison.tab.c"
+#line 76 "parserBison.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -105,8 +105,8 @@
 
 /* Use api.header.include to #include this header
    instead of duplicating it here.  */
-#ifndef YY_YY_PARSER_BISON_TAB_H_INCLUDED
-# define YY_YY_PARSER_BISON_TAB_H_INCLUDED
+#ifndef YY_YY_PARSERBISON_TAB_H_INCLUDED
+# define YY_YY_PARSERBISON_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -131,13 +131,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 7 "parser_bison.y"
+#line 7 "parserBison.y"
 
     char* str;
     struct OptionList *optionList;
     struct CommandList *commandList;
 
-#line 141 "parser_bison.tab.c"
+#line 141 "parserBison.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -150,7 +150,7 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_PARSER_BISON_TAB_H_INCLUDED  */
+#endif /* !YY_YY_PARSERBISON_TAB_H_INCLUDED  */
 
 
 
@@ -1306,58 +1306,58 @@ yyreduce:
   switch (yyn)
     {
   case 5:
-#line 24 "parser_bison.y"
+#line 24 "parserBison.y"
                                    {cmdList->tail->optionList = *(yyvsp[0].optionList);free((yyvsp[0].optionList)); }
-#line 1312 "parser_bison.tab.c"
+#line 1312 "parserBison.tab.c"
     break;
 
   case 6:
-#line 25 "parser_bison.y"
+#line 25 "parserBison.y"
                         {fprintf(stderr, "Erro: sem comando.\n"); freeOptionList((yyvsp[0].optionList)); free((yyvsp[0].optionList));}
-#line 1318 "parser_bison.tab.c"
+#line 1318 "parserBison.tab.c"
     break;
 
   case 7:
-#line 26 "parser_bison.y"
+#line 26 "parserBison.y"
                                        {addCommand(cmdList, (yyvsp[-2].str));free((yyvsp[-2].str));
                                         addOption(&(cmdList->tail->optionList), (yyvsp[-1].str)); free((yyvsp[-1].str));
                                         addOption(&(cmdList->tail->optionList), (yyvsp[0].str)); free((yyvsp[0].str));
                                         }
-#line 1327 "parser_bison.tab.c"
+#line 1327 "parserBison.tab.c"
     break;
 
   case 8:
-#line 31 "parser_bison.y"
+#line 31 "parserBison.y"
                                        {addCommand(cmdList, (yyvsp[0].str));free((yyvsp[0].str));}
-#line 1333 "parser_bison.tab.c"
+#line 1333 "parserBison.tab.c"
     break;
 
   case 9:
-#line 32 "parser_bison.y"
+#line 32 "parserBison.y"
                                        {addCommand(cmdList, (yyvsp[0].str));free((yyvsp[0].str));}
-#line 1339 "parser_bison.tab.c"
+#line 1339 "parserBison.tab.c"
     break;
 
   case 10:
-#line 34 "parser_bison.y"
+#line 34 "parserBison.y"
                                         {(yyval.optionList) = createOptionList();}
-#line 1345 "parser_bison.tab.c"
+#line 1345 "parserBison.tab.c"
     break;
 
   case 11:
-#line 35 "parser_bison.y"
+#line 35 "parserBison.y"
                                         {(yyval.optionList) = (yyvsp[-2].optionList); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
-#line 1351 "parser_bison.tab.c"
+#line 1351 "parserBison.tab.c"
     break;
 
   case 12:
-#line 36 "parser_bison.y"
+#line 36 "parserBison.y"
                                       {(yyval.optionList) = createOptionList(); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
-#line 1357 "parser_bison.tab.c"
+#line 1357 "parserBison.tab.c"
     break;
 
 
-#line 1361 "parser_bison.tab.c"
+#line 1361 "parserBison.tab.c"
 
       default: break;
     }
@@ -1589,7 +1589,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 40 "parser_bison.y"
+#line 40 "parserBison.y"
 
 
 void yyerror(const char* s) {

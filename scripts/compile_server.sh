@@ -3,11 +3,10 @@
 cd src
 
 # Gerar o parser
-flex parser_flex.l
-bison -o parser_bison.tab.c -d parser_bison.y
+bison -o parserBison.tab.c -d parserBison.y
+flex -o parserFlex.yy.c parserFlex.l 
 
 # Compilar os programas
-gcc *.c -o ../server -lfl
+gcc *.c -o ../server -lfl -Wall -g
 
 # Mover os cabeçalhos
-mv parser_bison.tab.h ../includes/parser_bison.tab.h

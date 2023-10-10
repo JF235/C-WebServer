@@ -7,18 +7,25 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 CommandList *cmdList;
 
-int processConnection(int newSock)
+/*
+Processa uma conexão estabelecida no novo socket `newSock`.
+- Lê a requisição enviada no socket com `readRequest`
+- Faz o parse da requisição com `parseRequest`
+- Responde a requisição com `respondeRequest`
+- Por fim, exibe uma mensagem de confirmação.
+*/
+void processConnection(int newSock)
 {
     char request[MAX_BUFFER_SIZE];
 
     readRequest(newSock, request);
 
     parseRequest(request);
-    
+
     webResource req = respondRequest(newSock);
-    
+
     freeCommandList(cmdList);
-    
+
     printf("%s - Mensagem enviada com sucesso (%ld bytes).\n", getHttpStatusText(req.httpCode), req.bytes);
 }
 
@@ -62,9 +69,10 @@ ssize_t readRequest(int newSock, char *request)
     }
     request[bytes_received] = '\0';
 
-    // DEBUG
-    // printf("bytes_received: %d\n\n", (int)bytes_received);
-    // printf("REQUISIÇÃO RECEBIDA:\n\n%s\n", request);
+#if DEBUG
+    printf("============================== REQUISIÇÃO RECEBIDA ==============================\n\n%s\n", request);
+    printf("bytes_received: %d\n\n", (int)bytes_received);
+#endif
 
     // Se a requisicao for um arquivo com a linha "bye" e uma quebra com \r\n, entao encerra o servidor.
     if (!strcmp("bye\r\n", request))
@@ -81,31 +89,24 @@ void parseRequest(char *request)
     cmdList = createCommandList();
     YY_BUFFER_STATE buff = yy_scan_string(request);
     yyparse();
+    
+    if (DEBUG){
+        printf("============================== PARSER CMD LIST ==============================\n\n");
+        printCommandList(cmdList);
+        printf("\n\n");
+    }
+    
     yy_delete_buffer(buff);
 }
 
-webResource respondRequest(int newSock){
+webResource respondRequest(int newSock)
+{
     char response[MAX_BUFFER_SIZE];
-    
+
     char *requestMethod = cmdList->head->commandName;
     char *resourcePath = cmdList->head->optionList.head->optionName;
 
-    // Redirects stdout to temp.txt (BAD!!!)
-    FILE *outputFile = freopen("temp.txt", "w", stdout);
-    if (outputFile == NULL)
-    {
-        perror("Erro ao abrir o arquivo de saída");
-        exit(EXIT_FAILURE);
-    }
-    webResource req = httpRequest("./web/meu-webspace", resourcePath, requestMethod);
-    fclose(outputFile);
-
-    // Reseta stdout para o terminal.
-    freopen("/dev/tty", "w", stdout);
-
-    // Recupera o conteúdo de temp.txt
-    fileName2buffer("temp.txt", response);
-    remove("temp.txt");
+    webResource req = httpRequest(response, resourcePath, requestMethod);
 
     // Envia a response para o cliente
     ssize_t bytes_enviados = write(newSock, response, strlen(response) + 1); // Envia o byte com a terminação '\0'
@@ -116,6 +117,10 @@ webResource respondRequest(int newSock){
     }
     req.bytes = bytes_enviados;
 
+#if DEBUG
+    printf("============================== RESPOSTA ENVIADA ==============================\n\n%s\n", response);
+    printf("bytes_enviados: %d\n\n", (int)bytes_enviados);
+#endif
+
     return req;
 }
-

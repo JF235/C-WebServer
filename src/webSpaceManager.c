@@ -1,18 +1,16 @@
 #include "../includes/essentials.h"
 
-webResource httpRequest(char *webPath, char *resource, char *reqText)
+webResource httpRequest(char response[MAX_BUFFER_SIZE], char *resource, char *reqText)
 {
     // Obtém o número da requisição
     http_request req = httpReqText2Number(reqText);
 
     // Verifica se o recurso existe e é acessível (Atividade 5)
-    webResource resourceInfo = checkWebResource(webPath, resource);
-    if (req == -1){
+    webResource resourceInfo = checkWebResource(resource);
+    if (req == -1)
         resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
-    }
 
-    // Imprime a resposta http no outputFileName.
-    httpRespond(resourceInfo, req);
+    httpRespond(response, resourceInfo, req);
 
 #if LOG
     FILE *logfile = freopen(logFileName, "a", stdout);
@@ -31,15 +29,16 @@ webResource httpRequest(char *webPath, char *resource, char *reqText)
     return resourceInfo;
 }
 
-webResource checkWebResource(const char *webPath, const char *resource)
+webResource checkWebResource(const char *resource)
 {
     webResource resourceInfo;
 
     // 1. Combinar caminho da web e recurso
     char resourcePath[MAX_PATH_SIZE];
-    snprintf(resourcePath, sizeof(resourcePath), "%s%s", webPath, resource);
+    snprintf(resourcePath, sizeof(resourcePath), "%s%s", WEBSPACE_PATH, resource);
 
-    if (!isSubfile(resourcePath, webPath)){
+    if (!isSubfile(resourcePath, WEBSPACE_PATH))
+    {
         // Arquivo não possui permissão de leitura, pois esta fora do webspace.
         resourceInfo.httpCode = HTTP_FORBIDDEN;
         return resourceInfo;
@@ -142,43 +141,43 @@ webResource checkWebResource(const char *webPath, const char *resource)
     }
 }
 
-void httpRespond(webResource resourceInfo, http_request req)
+void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_request req)
 {
     switch (resourceInfo.httpCode)
     {
     case 200: // OK
         // Requisição atendida
-        printHeader(resourceInfo.httpCode, resourceInfo.resourcePath, req);
+        printHeader(response, resourceInfo.httpCode, resourceInfo.resourcePath, req);
         if (req == HTTP_GET)
         {
-            fseek(stdout, -1, SEEK_SET); // Garante que o conteúdo será colocado ao final do arquivo.
-            printResource(resourceInfo.resourcePath);
+            printResource(response, resourceInfo.resourcePath);
         }
         break;
     case 404: // NOT FOUND
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
-            printHeader(resourceInfo.httpCode, ".", req);
+            printHeader(response, resourceInfo.httpCode, ".", req);
         else
-            printErrorHeader(resourceInfo.httpCode);
+            printErrorHeader(response, resourceInfo.httpCode);
         break;
     case 403: // FORBIDENN
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
-            printHeader(resourceInfo.httpCode, ".", req);
+            printHeader(response, resourceInfo.httpCode, ".", req);
         else
-            printErrorHeader(resourceInfo.httpCode);
+            printErrorHeader(response, resourceInfo.httpCode);
         break;
     default:
-        printErrorHeader(resourceInfo.httpCode);
+        printErrorHeader(response, resourceInfo.httpCode);
         break;
     }
 }
 
-void printHeader(http_code code, const char *resourcePath, http_request req)
+void printHeader(char buffer[MAX_BUFFER_SIZE], http_code code, const char *resourcePath, http_request req)
 {
     // Obter a data atual.
     time_t now;
     time(&now);
     char dateStr[128];
+    char dateLastModified[128];
     strftime(dateStr, sizeof(dateStr), "%a %b %d %H:%M:%S %Y BRT", localtime(&now));
 
     // Imprimir o cabeçalho certo para cada requisição
@@ -191,40 +190,46 @@ void printHeader(http_code code, const char *resourcePath, http_request req)
             perror("Erro ao obter informações do arquivo");
             exit(1);
         }
+        strftime(dateLastModified, sizeof(dateLastModified), "%a %b %d %H:%M:%S %Y BRT", localtime(&fileInfo.st_mtime));
 
-        printf("HTTP/1.1 200 OK\r\n");
-        printf("Date: %s\r\n", dateStr);
-        printf("Server: JFCM Server 0.1\r\n");
-        printf("Connection: %s\r\n", "keep-alive");
-        strftime(dateStr, sizeof(dateStr), "%a %b %d %H:%M:%S %Y BRT", localtime(&fileInfo.st_mtime));
-        printf("Last-Modified: %s\r\n", dateStr);
-        printf("Content-Length: %ld\r\n", (long)fileInfo.st_size);
-        printf("Content-Type: text/html\r\n");
-        printf("\r\n");
+        snprintf(buffer, MAX_BUFFER_SIZE,
+                 "HTTP/1.1 200 OK\r\n"
+                 "Date: %s\r\n"
+                 "Server: JFCM Server 0.1\r\n"
+                 "Connection: %s\r\n"
+                 "Last-Modified: %s\r\n"
+                 "Content-Length: %ld\r\n"
+                 "Content-Type: text/html\r\n"
+                 "\r\n",
+                 dateStr, "keep-alive", dateLastModified, (long)fileInfo.st_size);
     }
     else if (req == HTTP_OPTIONS)
     {
-        printf("HTTP/1.1 200 OK\r\n");
-        printf("Allow: OPTIONS, GET, HEAD, TRACE\r\n");
-        printf("Date: %s\r\n", dateStr);
-        printf("Server: JFCM Server 0.1\r\n");
-        printf("Connection: %s\r\n", "keep-alive");
-        printf("Content-Length: 0\r\n");
-        printf("Content-Type: text/plain\r\n");
-        printf("\r\n");
+        snprintf(buffer, MAX_BUFFER_SIZE,
+                 "HTTP/1.1 200 OK\r\n"
+                 "Allow: OPTIONS, GET, HEAD, TRACE\r\n"
+                 "Date: %s\r\n"
+                 "Server: JFCM Server 0.1\r\n"
+                 "Connection: %s\r\n"
+                 "Content-Length: 0\r\n"
+                 "Content-Type: text/plain\r\n"
+                 "\r\n",
+                 dateStr, "keep-alive");
     }
     else if (req == HTTP_TRACE)
     {
-        printf("HTTP/1.1 200 OK\r\n");
-        printf("Date: %s\r\n", dateStr);
-        printf("Server: JFCM Server 0.1\r\n");
-        printf("Connection: %s\r\n", "keep-alive");
-        printf("Content-Type: message/http\r\n");
-        printf("\r\n");
+        snprintf(buffer, MAX_BUFFER_SIZE,
+                 "HTTP/1.1 200 OK\r\n"
+                 "Date: %s\r\n"
+                 "Server: JFCM Server 0.1\r\n"
+                 "Connection: %s\r\n"
+                 "Content-Type: text/plain\r\n"
+                 "\r\n",
+                 dateStr, "keep-alive");
     }
 }
 
-void printErrorHeader(http_code code)
+void printErrorHeader(char buffer[MAX_BUFFER_SIZE], http_code code)
 {
     // Obter a data atual.
     time_t now;
@@ -232,77 +237,73 @@ void printErrorHeader(http_code code)
     char dateStr[128];
     strftime(dateStr, sizeof(dateStr), "%a %b %d %H:%M:%S %Y BRT", localtime(&now));
 
-    printf("HTTP/1.1 %s\r\n", getHttpStatusText(code));
-    printf("Date: %s\r\n", dateStr);
-    printf("Server: JFCM Server 0.1\r\n");
-    printf("Content-Type: text/html\r\n");
-    printf("Connection: %s\r\n", "close");
-    printf("\r\n");
+    snprintf(buffer, MAX_BUFFER_SIZE,
+             "HTTP/1.1 %s\r\n"
+             "Date: %s\r\n"
+             "Server: JFCM Server 0.1\r\n"
+             "Content-Type: text/html\r\n"
+             "Connection: %s\r\n"
+             "\r\n",
+             getHttpStatusText(code), dateStr, "close");
 }
 
-void printResource(const char *resourcePath)
+void printResource(char response[MAX_BUFFER_SIZE], char *resourcePath)
 {
     struct stat fileInfo;
     if (stat(resourcePath, &fileInfo) == -1)
     {
         perror("Erro ao obter informações do arquivo");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    // Abre o arquivo no modo leitura
+    // Abre o arquivo e lê o seu tamanho
     int fd = open(resourcePath, O_RDONLY);
     if (fd == -1)
     {
         perror("Erro ao abrir arquivo");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Crie um buffer com um tamanho adequado para o arquivo
-    char *buffer = (char *)malloc(fileInfo.st_size);
+    char *buffer = (char *)malloc(2*fileInfo.st_size); // Esta linha me custou horas... 
+    // LIÇÕES APRENDIDAS: USAR MALLOC NUNCA É TRIVIAL.
+    // QUANDO FOR ALOCAR ESPAÇO PARA UM BUFFER, SEMPRE ALOCAR MAIS QUE O NECESSÁRIO.
+    // VOCÊ IRÁ PRECISAR......
     if (buffer == NULL)
     {
         perror("Erro ao alocar memória");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Leia o arquivo completo e armazene no buffer
-    ssize_t totalBytesRead = 0;
-    ssize_t bytesRead;
-    while (totalBytesRead < fileInfo.st_size)
+    int bytes_read = read(fd, buffer, fileInfo.st_size);
+    if (bytes_read <= 0)
     {
-        bytesRead = read(fd, buffer + totalBytesRead, fileInfo.st_size - totalBytesRead);
-        if (bytesRead == -1)
-        {
-            perror("Erro ao ler arquivo");
-            free(buffer);
-            close(fd);
-            exit(1);
-        }
-        totalBytesRead += bytesRead;
+        perror("Erro ao ler o arquivo");
+        exit(EXIT_FAILURE);
     }
+    buffer[bytes_read] = '\0';
+    close(fd);
 
-    // Escreva o conteúdo do arquivo na saída padrão
-    write(STDOUT_FILENO, buffer, fileInfo.st_size);
+    // Concatena o header (response) com o conteúdo (buffer)
+    strcat(response, buffer);
 
     // Libere a memória alocada e feche o arquivo
     free(buffer);
-    close(fd);
 }
 
-int isSubfile(const char *filePath, const char *folderPath) {
-    char actualpath_file[1024];
-    char actualpath_webspace[1024];
-    if (realpath(filePath, actualpath_file) == NULL){
+int isSubfile(const char *filePath, const char *folderPath)
+{
+    char actualpath_file[MAX_PATH_SIZE];
+    char actualpath_webspace[MAX_PATH_SIZE];
+    if (realpath(filePath, actualpath_file) == NULL)
         return -1;
-    }
-    if (realpath(folderPath, actualpath_webspace) == NULL){
+    if (realpath(folderPath, actualpath_webspace) == NULL)
         return -1;
-    }
 
-    // Verifica se o caminho do webspace faz parte do caminho do arquivo. 
-    if (strstr(actualpath_file, actualpath_webspace) != NULL){
+    // Verifica se o caminho do webspace faz parte do caminho do arquivo.
+    if (strstr(actualpath_file, actualpath_webspace) != NULL)
         return 1;
-    } else {
+    else
         return 0;
-    }
 }
