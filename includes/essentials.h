@@ -1,6 +1,8 @@
 #ifndef ESSENTIALS_H
 #define ESSENTIALS_H
 
+#define _GNU_SOURCE
+
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -13,7 +15,7 @@
 
 #include <errno.h>
 #include <time.h>
-
+#include <signal.h>
 
 #include <fcntl.h>
 #include <string.h>

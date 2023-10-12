@@ -17,10 +17,12 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    config_signals();
+
     unsigned short port = (unsigned short)atoi(argv[1]);
     sock = createAndBind(port);
 
-    if (listen(sock, 5) != 0)
+    if (listen(sock, 0) != 0)
     {
         perror("Error in listen()");
         exit(EXIT_FAILURE);
@@ -32,6 +34,8 @@ int main(int argc, char **argv)
     loop
     {
         clientSize = sizeof(cliente);
+        
+        printf("Aguardando conexões...\n");
         if ((newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize)) == -1)
         {
             perror("Erro em accept()");

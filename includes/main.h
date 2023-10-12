@@ -3,6 +3,8 @@
 
 #include "essentials.h"
 
+#include <poll.h>
+
 #define DEBUG 0
 #define LOG 0
 

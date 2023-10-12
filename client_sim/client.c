@@ -1,5 +1,6 @@
 #include "client.h"
 
+
 void separarCabecalhoEConteudo(const char *respostaHTTP, char **cabecalho, char **conteudo)
 {
     // Procurar a primeira ocorrência de "\r\n\r\n" para separar o cabeçalho do conteúdo
@@ -35,12 +36,17 @@ void connectToServer(int *sock, char *serverIp, char *port){
     server.sin_family = AF_INET;
     server.sin_port = htons(atoi(port));
     inet_aton(serverIp, (struct in_addr *)&server.sin_addr.s_addr);
-    
+
+    int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+    setsockopt(*sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+
     if (connect(*sock, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        perror("Erro ao conectar");
+        perror("connect() error");
         exit(EXIT_FAILURE);
     }
+    
+    printf("Conexão concluída (sock = %d)\n", *sock);
 }
 
 void sendRequest(int serverSock, char *request){
@@ -94,6 +100,12 @@ void receiveResponse(int serverSock){
     fclose(file);
 }
 
+// 1 is valid, 0 isn't
+int checkFD(int fd)
+{
+    return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
+}
+
 int main(int argc, char **argv)
 {
     int serverSock;
@@ -112,9 +124,15 @@ int main(int argc, char **argv)
     {
         // Conecta com o servidor
         connectToServer(&serverSock, argv[1], argv[2]);
+        if (!checkFD(serverSock)){
+            fprintf(stderr, "Problema ao conectar com o servidor\n");
+            exit(EXIT_FAILURE);
+        }
 
         // Obtém o caminho da requisição que será feita
         strcpy(reqFilePath, REQS_PATH);
+
+        printf("Digite o comando:\n");
         scanf("%s", buffer);
         if (!strcmp(reqFilePath, "bye")){
             printf("bye\n");
@@ -125,7 +143,6 @@ int main(int argc, char **argv)
             strcat(reqFilePath, buffer);
             strcat(reqFilePath,".txt");
         }
-        printf("%s", reqFilePath);
         // Obtém o conteúdo do arquivo
         fileName2buffer(reqFilePath, request);
         

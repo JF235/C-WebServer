@@ -7,13 +7,6 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 CommandList *cmdList;
 
-/*
-Processa uma conexão estabelecida no novo socket `newSock`.
-- Lê a requisição enviada no socket com `readRequest`
-- Faz o parse da requisição com `parseRequest`
-- Responde a requisição com `respondeRequest`
-- Por fim, exibe uma mensagem de confirmação.
-*/
 int processConnection(int newSock)
 {
     char request[MAX_BUFFER_SIZE];
@@ -61,20 +54,39 @@ int createAndBind(unsigned short port)
 
 ssize_t readRequest(int newSock, char *request)
 {
-    printf("Efetuando leitura... ");
+    printf("Aguardando dados... ");
     // Flush é necessário, pois read é uma chamada bloqueante
     fflush(stdout);
+
+    struct pollfd fds[10];
+    memset(fds, 0 , sizeof(fds));
+    fds[0].fd = newSock;
+    fds[0].events = POLLIN;
+    int timeout = SERVER_READ_TIMEOUT_MS;
+
+    int rc = poll(fds, 10, timeout);
+
+    if (rc < 0)
+    {
+      perror("poll() error");
+      exit(EXIT_FAILURE);
+    }
+    if (rc == 0) {
+      fprintf(stderr,"poll() timed out\n");
+      exit(EXIT_FAILURE);
+    }
     
     ssize_t bytes_received = read(newSock, request, MAX_BUFFER_SIZE);
-    printf("Leitura concluída\n");
 
     if (bytes_received < 0)
     {
         perror("Erro ao receber dados");
         exit(EXIT_FAILURE);
     } else if (bytes_received == 0){
+        printf("Leitura com tamanho 0\n");
         return 0;
     }
+    printf("Leitura concluída\n");
     request[bytes_received] = '\0';
 
 #if DEBUG
@@ -131,4 +143,27 @@ webResource respondRequest(int newSock)
 #endif
 
     return req;
+}
+
+void sigchld_handler(int signo) {
+    (void)signo;
+    // Handle the SIGCHLD signal
+    // ...
+}
+
+void config_signals(void){
+    // Define o tratador de sinal para SIGCHLD
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sigchld_handler;
+    
+    // Ativa a flag SA_RESTART
+    // Nesse caso, apos interrupcao por SIGCHLD, a chamada interrompida é reiniciada.
+    sa.sa_flags |= SA_RESTART;
+
+    // Install the signal handler for SIGINT
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+        perror("sigaction()");
+        exit(EXIT_FAILURE);
+    }
 }

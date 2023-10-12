@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "essentials.h": "c",
-        "webspacemanager.h": "c"
+        "webspacemanager.h": "c",
+        "select.h": "c",
+        "client.h": "c",
+        "time.h": "c",
+        "poll.h": "c"
     }
 }
