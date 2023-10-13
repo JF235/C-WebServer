@@ -27,7 +27,7 @@ void separarCabecalhoEConteudo(const char *respostaHTTP, char **cabecalho, char 
 Cria o socket e realiza a conexão ao servidor com ip `serverIp` e porta `port`.
 O valor do socket é armazenado no endereço `sock`.
 */
-void connectToServer(int *sock, char *serverIp, char *port);
+int connectToServer(char *serverIp, char *port);
 
 /*
 Envia a requisição `request` pelo socket `serverSock`.
@@ -38,6 +38,6 @@ void sendRequest(int serverSock, char *request);
 Recebe a resposta pelo socket `serverSock`.
 Guarda o conteúdo em um arquivo e também imprime na saída.
 */
-void receiveResponse(int serverSock);
+int receiveResponse(int serverSock);
 
 #endif

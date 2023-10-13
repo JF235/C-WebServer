@@ -5,6 +5,7 @@ extern int yyparse();
 extern YY_BUFFER_STATE yy_scan_string(char *str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
+extern int requests;
 CommandList *cmdList;
 
 int processConnection(int newSock)
@@ -54,7 +55,7 @@ int createAndBind(unsigned short port)
 
 ssize_t readRequest(int newSock, char *request)
 {
-    printf("Aguardando dados... ");
+    printf("Aguardando dados...\n");
     // Flush é necessário, pois read é uma chamada bloqueante
     fflush(stdout);
 
@@ -147,8 +148,8 @@ webResource respondRequest(int newSock)
 
 void sigchld_handler(int signo) {
     (void)signo;
-    // Handle the SIGCHLD signal
-    // ...
+    requests--;
+    printf("%d: Aguardando conexões... %d filho(s) livre(s)\n", getpid(), MAX_NUMBER_CHLD - requests);
 }
 
 void config_signals(void){
@@ -166,4 +167,26 @@ void config_signals(void){
         perror("sigaction()");
         exit(EXIT_FAILURE);
     }
+}
+
+int send_response_overload(int sock){
+    // Construindo a resposta
+    char htmlContent[MAX_BUFFER_SIZE] = {0};
+    
+    // Cabeçalho
+    printErrorHeader(htmlContent, HTTP_SERVICE_UNAVAILABLE);
+
+    // Corpo
+    char resourcePath[MAX_PATH_SIZE];
+    snprintf(resourcePath, sizeof(resourcePath), "%s%s", WEBSPACE_PATH, "/../overload.html");
+    printResource(htmlContent, resourcePath);
+
+    // Envia a response para o cliente
+    ssize_t bytes_enviados = write(sock, htmlContent, strlen(htmlContent) + 1); // Envia o byte com a terminação '\0'
+    if (bytes_enviados == -1)
+    {
+        perror("Erro ao enviar a response");
+        exit(EXIT_FAILURE);
+    }
+    return (int)bytes_enviados;
 }
