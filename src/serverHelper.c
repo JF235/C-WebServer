@@ -13,7 +13,8 @@ int processConnection(int newSock)
     char request[MAX_BUFFER_SIZE];
 
     int status = (int)readRequest(newSock, request);
-    if (status == 0) return status;
+    if (status == 0)
+        return status;
 
     parseRequest(request);
 
@@ -32,14 +33,14 @@ int createAndBind(unsigned short port)
     int sock;
 
     // Cria um socket para o servidor
-    TRY_ERR( sock = socket(AF_INET, SOCK_STREAM, 0) );
+    TRY_ERR(sock = socket(AF_INET, SOCK_STREAM, 0));
 
     // Atribui o endereço do socket
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
-    TRY_ERR( bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) );
+    TRY_ERR(bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)));
 
     return sock;
 }
@@ -52,23 +53,25 @@ ssize_t readRequest(int newSock, char *request)
     CHLD_WAIT_TRACE;
 
     struct pollfd fds[10];
-    memset(fds, 0 , sizeof(fds));
+    memset(fds, 0, sizeof(fds));
     fds[0].fd = newSock;
     fds[0].events = POLLIN;
     int timeout = SERVER_READ_TIMEOUT_MS;
 
-    TRY_ERR( numFds = poll(fds, 10, timeout) );
+    TRY_ERR(numFds = poll(fds, 10, timeout));
 
-    if (numFds == 0) {
-      CHLD_TIMEDOUT_TRACE;
-      exit(EXIT_FAILURE);
+    if (numFds == 0)
+    {
+        CHLD_TIMEDOUT_TRACE;
+        exit(EXIT_FAILURE);
     }
-    
-    TRY_ERR( bytes_received = read(newSock, request, MAX_BUFFER_SIZE) );
-    
+
+    TRY_ERR(bytes_received = read(newSock, request, MAX_BUFFER_SIZE));
+
     CHLD_READ_TRACE;
-    
-    if (bytes_received == 0){
+
+    if (bytes_received == 0)
+    {
         return 0;
     }
     request[bytes_received] = '\0';
@@ -90,9 +93,10 @@ void parseRequest(char *request)
     cmdList = createCommandList();
     YY_BUFFER_STATE buff = yy_scan_string(request);
     yyparse();
-    
+
     PARSER_TRACE;
-    
+
+    // yylex_destroy();
     yy_delete_buffer(buff);
 }
 
@@ -108,7 +112,7 @@ webResource respondRequest(int newSock)
 
     // Envia a response para o cliente
     // Envia o byte com a terminação '\0'
-    TRY_ERR( bytes_enviados = write(newSock, response, strlen(response) + 1) );
+    TRY_ERR(bytes_enviados = write(newSock, response, strlen(response) + 1));
 
     req.bytes = bytes_enviados;
 
@@ -117,30 +121,33 @@ webResource respondRequest(int newSock)
     return req;
 }
 
-void sigchld_handler(int signo) {
+void sigchld_handler(int signo)
+{
     (void)signo;
     requests--;
     SERVER_ACCEPTING_TRACE;
 }
 
-void config_signals(void){
+void config_signals(void)
+{
     // Define o tratador de sinal para SIGCHLD
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sigchld_handler;
-    
+
     // Ativa a flag SA_RESTART
     // Nesse caso, apos interrupcao por SIGCHLD, a chamada interrompida é reiniciada.
     sa.sa_flags |= SA_RESTART;
 
     // Install the signal handler for SIGINT
-    TRY_ERR( sigaction(SIGCHLD, &sa, NULL) );
+    TRY_ERR(sigaction(SIGCHLD, &sa, NULL));
 }
 
-int send_response_overload(int sock){
+int send_response_overload(int sock)
+{
     ssize_t bytes_enviados;
     char htmlContent[MAX_BUFFER_SIZE] = {0};
-    
+
     // Cabeçalho
     printErrorHeader(htmlContent, HTTP_SERVICE_UNAVAILABLE);
 
@@ -150,7 +157,7 @@ int send_response_overload(int sock){
     printResource(htmlContent, resourcePath);
 
     // Envia a response para o cliente
-    TRY_ERR( bytes_enviados = write(sock, htmlContent, strlen(htmlContent) + 1) ); // Envia o byte com a terminação '\0'
+    TRY_ERR(bytes_enviados = write(sock, htmlContent, strlen(htmlContent) + 1)); // Envia o byte com a terminação '\0'
 
     return (int)bytes_enviados;
 }

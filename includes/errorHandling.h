@@ -16,7 +16,7 @@
     int retval = (x); \
     if (retval < 0) \
     { \
-        fprintf(stderr, "\033[1;1m%s:%d:\033[m Runtime error at\n%s\nreturned %d \033[31m(%s)\n", __FILE__, __LINE__, #x, retval, strerror(errno)); \
+        fprintf(stderr, "\033[1;1m%s:%d:\033[m Runtime error at\n%s\nreturned %d \033[31m(%s)\033[m\n\n", __FILE__, __LINE__, #x, retval, strerror(errno)); \
         exit(EXIT_FAILURE); \
     } \
 } while (0);
@@ -33,7 +33,7 @@
     void *retval = (void *)(x); \
     if (retval == NULL) \
     { \
-        fprintf(stderr, "%s:%d Runtime error at\n%s\nreturned NULL (%s)\n", __FILE__, __LINE__, #x, strerror(errno)); \
+        fprintf(stderr, "%s:%d Runtime error at\n%s\nreturned NULL (%s)\n\n", __FILE__, __LINE__, #x, strerror(errno)); \
         exit(EXIT_FAILURE); \
     } \
 } while (0);
