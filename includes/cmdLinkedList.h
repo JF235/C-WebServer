@@ -56,4 +56,7 @@ void printCommandList(CommandList *commandList);
 // Esvazia todos os comandos e opcoes associadas.
 void freeCommandList(CommandList *commandList);
 
+// Busca pelo comando de nome `commandName`
+struct Command *findCommand(char *commandName, CommandList *commandList);
+
 #endif

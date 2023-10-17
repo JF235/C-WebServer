@@ -18,7 +18,7 @@ Processa uma conexão estabelecida no novo socket `newSock`.
 Retorna: Número do status
 0 pode significar que foi lido um EOF.
 */
-int processConnection(int newSock);
+int processConnection(int newSock, bool *keepalive);
 
 /*
 Cria um soquete e atribui o endereço de IP local com a porta

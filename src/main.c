@@ -11,6 +11,7 @@ int main(int argc, char **argv)
 {
     struct sockaddr_in cliente;
     int sock, newSock;
+    bool keepalive = true;
     unsigned int clientSize;
     pid_t chld_pid;
 
@@ -52,8 +53,10 @@ int main(int argc, char **argv)
                 // Processo filho
 
                 CHLD_CREATED_TRACE;
-                // Uma vez que a conexão foi aceita, processa a conexão.
-                processConnection(newSock);
+
+                while (keepalive)
+                    // Uma vez que a conexão foi aceita, processa a conexão.
+                    processConnection(newSock, &keepalive);
 
                 shutdown(newSock, SHUT_RDWR);
                 CHLD_EXITED_TRACE;

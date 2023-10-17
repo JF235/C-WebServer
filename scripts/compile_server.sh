@@ -1,5 +1,4 @@
 #! /bin/bash
-
 cd src
 
 # Gerar o parser
@@ -8,5 +7,3 @@ flex -o parserFlex.yy.c parserFlex.l
 
 # Compilar os programas
 gcc *.c -o ../server -lfl -Wall -Wextra -g
-
-# Mover os cabeçalhos

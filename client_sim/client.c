@@ -44,7 +44,7 @@ int connectToServer(char *serverIp, char *port)
     int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
     setsockopt(serverSock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
 
-    printf("Conectando em %s:%s\n", serverIp, port);
+    printf("\nConectando em %s:%s\n", serverIp, port);
     if (connect(serverSock, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
         perror("connect() error");
@@ -131,9 +131,9 @@ int main(int argc, char **argv)
     }
 
     char comando[32];
-    printf("Enter command:\n");
     loop
     {
+        printf("Enter command:\n");
         scanf("%s", comando);
         if (!strcmp(comando, "connect"))
         {
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
             // Obtém o caminho da requisição que será feita
             strcpy(reqFilePath, REQS_PATH);
 
-            printf("Digite o comando:\n");
+            printf("Requisição:\n");
             scanf("%s", buffer);
             if (!strcmp(reqFilePath, "bye"))
             {

@@ -140,3 +140,15 @@ void freeCommandList(CommandList *commandList)
     }
     free(commandList);
 }
+
+struct Command *findCommand(char *commandName, CommandList *commandList){
+    Command *currentCommand = commandList->head;
+    while (currentCommand != NULL)
+    {
+        if(!strcmp(currentCommand->commandName, commandName))
+            return currentCommand;
+        
+        currentCommand = currentCommand->nextCommand;
+    }
+    return NULL;
+}

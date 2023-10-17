@@ -8,15 +8,25 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern int requests;
 CommandList *cmdList;
 
-int processConnection(int newSock)
+int processConnection(int newSock, bool *keepalive)
 {
     char request[MAX_BUFFER_SIZE];
 
     int status = (int)readRequest(newSock, request);
-    if (status == 0)
+    if (status == 0){
+        *keepalive = false; // Encerrou a conexao com EOF
         return status;
+    }
 
     parseRequest(request);
+
+    Command *cmd = findCommand("Connection", cmdList);
+
+    char *optionName = cmd->optionList.head->optionName;
+    if (!strcmp(optionName, "keep-alive"))
+        *keepalive = true;
+    else
+        *keepalive = false;
 
     webResource req = respondRequest(newSock);
 
