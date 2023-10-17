@@ -250,19 +250,14 @@ void printErrorHeader(char buffer[MAX_BUFFER_SIZE], http_code code)
 void printResource(char response[MAX_BUFFER_SIZE], char *resourcePath)
 {
     struct stat fileInfo;
-    if (stat(resourcePath, &fileInfo) == -1)
-    {
-        perror("Erro ao obter informações do arquivo");
-        exit(EXIT_FAILURE);
-    }
+    int fd;
+    int bytesRead;
+    
+    // Lê informações do arquivo
+    TRY_ERR( stat(resourcePath, &fileInfo) );
 
     // Abre o arquivo e lê o seu tamanho
-    int fd = open(resourcePath, O_RDONLY);
-    if (fd == -1)
-    {
-        perror("Erro ao abrir arquivo");
-        exit(EXIT_FAILURE);
-    }
+    TRY_ERR( fd = open(resourcePath, O_RDONLY) );
 
     // Crie um buffer com um tamanho adequado para o arquivo
     char *buffer = (char *)malloc(2*fileInfo.st_size); // Esta linha me custou horas... 
@@ -276,13 +271,13 @@ void printResource(char response[MAX_BUFFER_SIZE], char *resourcePath)
     }
 
     // Leia o arquivo completo e armazene no buffer
-    int bytes_read = read(fd, buffer, fileInfo.st_size);
-    if (bytes_read <= 0)
+    TRY_ERR( bytesRead = read(fd, buffer, fileInfo.st_size) );
+    if (bytesRead == 0)
     {
-        perror("Erro ao ler o arquivo");
+        printf("Arquivo com tamanho 0");
         exit(EXIT_FAILURE);
     }
-    buffer[bytes_read] = '\0';
+    buffer[bytesRead] = '\0';
     close(fd);
 
     // Concatena o header (response) com o conteúdo (buffer)

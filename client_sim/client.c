@@ -131,6 +131,7 @@ int main(int argc, char **argv)
     }
 
     char comando[32];
+    printf("Enter command:\n");
     loop
     {
         scanf("%s", comando);

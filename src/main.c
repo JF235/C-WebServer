@@ -20,48 +20,42 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    // Configura o tratamento de sinal para SIGCHLD
     config_signals();
 
     unsigned short port = (unsigned short)atoi(argv[1]);
     sock = createAndBind(port);
 
-    if (listen(sock, 0) != 0)
-    {
-        perror("Error in listen()");
-        exit(EXIT_FAILURE);
-    }
+    TRY_ERR( listen(sock, 0) );
 
     // Sinalização de funcionamento
-    printf("\n%s já está aceitando conexões de clientes HTTP em %d.\n\n", argv[0], port);
+    SERVER_START_TRACE;
 
     loop
     {
         clientSize = sizeof(cliente);
 
-        if (requests < MAX_NUMBER_CHLD)
-            printf("%d: Aguardando conexões... %d filho(s) livre(s)\n", getpid(), MAX_NUMBER_CHLD - requests);
-        else
-            printf("%d: Aguardando conexões... (todos filhos ocupados)\n", getpid());
+        if (requests < MAX_NUMBER_CHLD) SERVER_ACCEPTING_TRACE;
+        else SERVER_FULL_TRACE;
 
-        if ((newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize)) == -1)
-        {
-            perror("Erro em accept()");
-            exit(EXIT_FAILURE);
-        }
+        TRY_ERR(
+            newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize)
+        );
 
         if (requests < MAX_NUMBER_CHLD)
         {
-            chld_pid = fork();
+            TRY_ERR( chld_pid = fork() );
 
             if (chld_pid == 0)
             {
                 // Processo filho
-                printf("%d: Alguém conectou\n", getpid());
+                
+                CHLD_CREATED_TRACE;
                 // Uma vez que a conexão foi aceita, processa a conexão.
                 processConnection(newSock);
 
                 shutdown(newSock, SHUT_RDWR);
-                printf("%d: Desconectou\n", getpid());
+                CHLD_EXITED_TRACE;
                 exit(EXIT_SUCCESS); // Fim do processo filho
             }
             else if (chld_pid > 0)
@@ -69,16 +63,11 @@ int main(int argc, char **argv)
                 requests++;
                 close(newSock);
             }
-            else
-            {
-                perror("Erro em fork()");
-                exit(EXIT_FAILURE);
-            }
         }
         else
         {
             send_response_overload(newSock);
-            printf("%d: Mensagem de erro enviada\n", getpid());
+            SERVER_OVERLOAD_TRACE;
             shutdown(newSock, SHUT_RDWR);
         }
 

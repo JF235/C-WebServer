@@ -58,13 +58,16 @@ Tratador do sinal SIGCHLD.
 void sigchld_handler(int signo);
 
 /*
-Configura o tratador para o sinal SIGCHLD e seta
-a flag SA_RESTART que reinicia chamadas de sistema bloqueantas
+Configura o tratador para o sinal `SIGCHLD` e seta
+a flag `SA_RESTART` que reinicia chamadas de sistema bloqueantas
 quando a sua execução é interrompida por um sinal.
 */
 void config_signals(void);
 
-
+/*
+Envia uma resposta HTTP com uma página HTML mínima indicando que
+o servidor está sobrecarregado.
+*/
 int send_response_overload(int sock);
 
 #endif

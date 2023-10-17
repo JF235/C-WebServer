@@ -5,6 +5,7 @@
         "select.h": "c",
         "client.h": "c",
         "time.h": "c",
-        "poll.h": "c"
+        "poll.h": "c",
+        "cstdlib": "c"
     }
 }
