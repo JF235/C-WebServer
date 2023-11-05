@@ -1,6 +1,8 @@
 #include "../includes/essentials.h"
 
-webResource httpRequest(char response[MAX_BUFFER_SIZE], char *resource, char *reqText)
+char webspacePath[512];
+
+webResource httpRequest(char *response, char *resource, char *reqText)
 {
     // Obtém o número da requisição
     http_request req = httpReqText2Number(reqText);
@@ -35,9 +37,11 @@ webResource checkWebResource(const char *resource)
 
     // 1. Combinar caminho da web e recurso
     char resourcePath[MAX_PATH_SIZE];
-    snprintf(resourcePath, sizeof(resourcePath), "%s%s", WEBSPACE_PATH, resource);
+    
+    // Full Resource Path
+    snprintf(resourcePath, sizeof(resourcePath), "%s%s", webspacePath, resource);
 
-    if (!isSubfile(resourcePath, WEBSPACE_PATH))
+    if (!isSubfile(resourcePath, webspacePath))
     {
         // Arquivo não possui permissão de leitura, pois esta fora do webspace.
         resourceInfo.httpCode = HTTP_FORBIDDEN;
@@ -141,7 +145,7 @@ webResource checkWebResource(const char *resource)
     }
 }
 
-void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_request req)
+void httpRespond(char *response, webResource resourceInfo, http_request req)
 {
     switch (resourceInfo.httpCode)
     {
@@ -171,7 +175,7 @@ void httpRespond(char response[MAX_BUFFER_SIZE], webResource resourceInfo, http_
     }
 }
 
-void printHeader(char buffer[MAX_BUFFER_SIZE], const char *resourcePath, http_request req)
+void printHeader(char *buffer, const char *resourcePath, http_request req)
 {
     // Obter a data atual.
     time_t now;
@@ -229,7 +233,7 @@ void printHeader(char buffer[MAX_BUFFER_SIZE], const char *resourcePath, http_re
     }
 }
 
-void printErrorHeader(char buffer[MAX_BUFFER_SIZE], http_code code)
+void printErrorHeader(char *buffer, http_code code)
 {
     // Obter a data atual.
     time_t now;
@@ -247,7 +251,7 @@ void printErrorHeader(char buffer[MAX_BUFFER_SIZE], http_code code)
              getHttpStatusText(code), dateStr, "close");
 }
 
-void printResource(char response[MAX_BUFFER_SIZE], char *resourcePath)
+void printResource(char *response, char *resourcePath)
 {
     struct stat fileInfo;
     int fd;
@@ -301,4 +305,12 @@ int isSubfile(const char *filePath, const char *folderPath)
         return 1;
     else
         return 0;
+}
+
+void config_webspace(){
+    char cwdPath[256];
+    // Current Workind Directory
+    getcwd(cwdPath, sizeof(cwdPath));
+    // Full Web Path
+    snprintf(webspacePath, sizeof(webspacePath), "%s%s", cwdPath, WEBSPACE_REL_PATH);
 }
