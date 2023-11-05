@@ -7,6 +7,7 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 extern int requests;
 CommandList *cmdList;
+extern char webspacePath[256];
 
 int processConnection(int newSock, bool *keepalive)
 {
@@ -21,7 +22,6 @@ int processConnection(int newSock, bool *keepalive)
     parseRequest(request);
 
     Command *cmd = findCommand("Connection", cmdList);
-
     char *optionName = cmd->optionList.head->optionName;
     if (!strcmp(optionName, "keep-alive"))
         *keepalive = true;
@@ -72,8 +72,10 @@ ssize_t readRequest(int newSock, char *request)
 
     if (numFds == 0)
     {
+        shutdown(newSock, SHUT_RDWR);
         CHLD_TIMEDOUT_TRACE;
-        exit(EXIT_FAILURE);
+        CHLD_EXITED_TRACE;
+        exit(EXIT_SUCCESS); // Fim do processo filho
     }
 
     TRY_ERR(bytes_received = read(newSock, request, MAX_BUFFER_SIZE));
@@ -163,7 +165,7 @@ int send_response_overload(int sock)
 
     // Corpo
     char resourcePath[MAX_PATH_SIZE];
-    snprintf(resourcePath, sizeof(resourcePath), "%s%s", WEBSPACE_PATH, "/../overload.html");
+    snprintf(resourcePath, sizeof(resourcePath), "%s%s", webspacePath, "/../overload.html");
     printResource(htmlContent, resourcePath);
 
     // Envia a response para o cliente

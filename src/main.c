@@ -21,6 +21,9 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    // Config webspacePath
+    config_webspace();
+
     // Configura o tratamento de sinal para SIGCHLD
     config_signals();
 

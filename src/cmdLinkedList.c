@@ -25,7 +25,12 @@ void addOption(OptionList *optionList, char *optionName)
         perror("Erro ao alocar memória para a opção");
         exit(EXIT_FAILURE);
     }
-    strcpy(newOption->optionName, optionName);
+
+    if (strlen(optionName) >= MAX_OPTION_NAME)
+        printf("Big option name. strlen: %ld\nTruncating...\n", strlen(optionName));
+    
+    strncpy(newOption->optionName, optionName, MAX_OPTION_NAME - 1);
+    newOption->optionName[MAX_OPTION_NAME - 1] = '\0';
 
     // O novo elemento não aponta para ninguém
     newOption->nextOption = NULL;

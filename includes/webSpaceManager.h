@@ -3,9 +3,9 @@
 
 #include "essentials.h"
 
-#define MAX_PATH_SIZE 512
+#define MAX_PATH_SIZE 1024
 
-#define WEBSPACE_PATH "/home/jf/C-WebServer/web/meu-webspace"
+#define WEBSPACE_REL_PATH "/web/meu-webspace"
 
 /*
 webResource:
@@ -64,5 +64,11 @@ void printResource(char *response, char *resourcePath);
 Verifica se o arquivo de caminho `filePath` é um subarquivo contido na pasta de caminho `folderPath`.
 */
 int isSubfile(const char *filePath, const char *folderPath) ;
+
+/*
+Seta a variável global `webspacePath` que contém o caminho absoluto 
+do webspace.
+*/
+void config_webspace();
 
 #endif
