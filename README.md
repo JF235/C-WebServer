@@ -4,6 +4,13 @@ Servidor HTTP desenvolvido para disciplina EA872 FEEC-Unicamp.
 
 ## Building
 
+## Pré-requisitos
+
+Testado e funcionando com:
+- gcc (9.4.0)
+- bison (3.5.1)
+- flex (2.6.4)
+
 ### Server
 
 Executar o script shell `./scripts/compile_server.sh`.

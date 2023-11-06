@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "httpHelper.h" // Precisa estar acima de webSpaceManager
 #include "webSpaceManager.h" 
