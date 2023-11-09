@@ -5,15 +5,44 @@
 char *logFileName;
 #endif
 
-int requests = 0;
+//============================================
+//============================================
+// SERVIDOR MULTITHREADED
+//============================================
+//============================================
+
+int workingThreads = 0;
+pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *threadFunction(void *arg)
+{
+    int newSock = *((int *)arg);
+    bool keepalive = true;
+
+    CHLD_CREATED_TRACE;
+
+    while (keepalive)
+        processConnection(newSock, &keepalive);
+
+    close(newSock);
+    free(arg);
+    
+    pthread_mutex_lock(&count_mutex);
+    workingThreads--;
+    pthread_mutex_unlock(&count_mutex);
+    
+    CHLD_EXITED_TRACE;
+    pthread_exit(NULL);
+}
 
 int main(int argc, char **argv)
 {
     struct sockaddr_in cliente;
-    int sock, newSock;
-    bool keepalive = true;
-    unsigned int clientSize;
-    pid_t chld_pid;
+    socklen_t clientSize = sizeof(cliente);
+
+    int newSock;
+    int serverSock;
 
     if (argc != 2)
     {
@@ -24,65 +53,43 @@ int main(int argc, char **argv)
     // Config webspacePath
     config_webspace();
 
-    // Configura o tratamento de sinal para SIGCHLD
-    config_signals();
-
     unsigned short port = (unsigned short)atoi(argv[1]);
-    sock = createAndBind(port);
+    serverSock = createAndBind(port);
 
-    TRY_ERR(listen(sock, 0));
+    TRY_ERR(listen(serverSock, 0));
 
     // Sinalização de funcionamento
     SERVER_START_TRACE;
+    SERVER_ACCEPTING_TRACE;
 
     loop
     {
-        clientSize = sizeof(cliente);
+        TRY_ERR(newSock = accept(serverSock, (struct sockaddr *)&cliente, &clientSize));
 
-        if (requests < MAX_NUMBER_CHLD)
+        // Lock para fazer a leitura
+        pthread_mutex_lock(&count_mutex);
+        if (workingThreads < MAX_THREADS){
+            workingThreads++;
+            pthread_mutex_unlock(&count_mutex);
+
+            pthread_t thread;
+            int *arg = malloc(sizeof(int));
+            *arg = newSock;
+            TRY_ERR(pthread_create(&thread, NULL, threadFunction, arg));
             SERVER_ACCEPTING_TRACE;
-        else
-            SERVER_FULL_TRACE;
-
-        TRY_ERR(
-            newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize));
-
-        if (requests < MAX_NUMBER_CHLD)
-        {
-            TRY_ERR(chld_pid = fork());
-
-            if (chld_pid == 0)
-            {
-                // Processo filho
-
-                CHLD_CREATED_TRACE;
-
-                while (keepalive)
-                    // Uma vez que a conexão foi aceita, processa a conexão.
-                    processConnection(newSock, &keepalive);
-
-                shutdown(newSock, SHUT_RDWR);
-                CHLD_EXITED_TRACE;
-                exit(EXIT_SUCCESS); // Fim do processo filho
-            }
-            else if (chld_pid > 0)
-            {
-                requests++;
-                close(newSock);
-            }
         }
-        else
-        {
+        else{
+            pthread_mutex_unlock(&count_mutex);
+
             send_response_overload(newSock);
             SERVER_OVERLOAD_TRACE;
-            shutdown(newSock, SHUT_RDWR);
+
+            close(newSock);
         }
 
     } // END LOOP
 
-    while (wait(NULL) > 0)
-        ; // Wait for child
-    shutdown(sock, SHUT_RDWR);
+    close(serverSock);
     printf("O servidor terminou com erro.\n");
     exit(EXIT_FAILURE);
 }
