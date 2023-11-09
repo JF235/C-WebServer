@@ -22,11 +22,18 @@ int processConnection(int newSock, bool *keepalive)
     parseRequest(request);
 
     Command *cmd = findCommand("Connection", cmdList);
-    char *optionName = cmd->optionList.head->optionName;
-    if (!strcmp(optionName, "keep-alive"))
-        *keepalive = true;
-    else
+    if (cmd == NULL)
+    {
         *keepalive = false;
+    }
+    else
+    {
+        char *optionName = cmd->optionList.head->optionName;
+        if (!strcmp(optionName, "keep-alive"))
+            *keepalive = true;
+        else
+            *keepalive = false;
+    }
 
     webResource req = respondRequest(newSock);
 
