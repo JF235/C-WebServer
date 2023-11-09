@@ -18,7 +18,8 @@ int processConnection(int newSock, bool *keepalive)
     char request[MAX_BUFFER_SIZE];
 
     int status = (int)readRequest(newSock, request);
-    if (status == 0){
+    if (status == 0)
+    {
         *keepalive = false; // Encerrou a conexao com EOF
         return status;
     }
@@ -26,14 +27,20 @@ int processConnection(int newSock, bool *keepalive)
     pthread_mutex_lock(&parser_mutex);
     CommandList *cmdList = parseRequest(request);
     pthread_mutex_unlock(&parser_mutex);
-    
 
     Command *cmd = findCommand("Connection", cmdList);
-    char *optionName = cmd->optionList.head->optionName;
-    if (!strcmp(optionName, "keep-alive"))
-        *keepalive = true;
-    else
+    if (cmd == NULL)
+    {
         *keepalive = false;
+    }
+    else
+    {
+        char *optionName = cmd->optionList.head->optionName;
+        if (!strcmp(optionName, "keep-alive"))
+            *keepalive = true;
+        else
+            *keepalive = false;
+    }
 
     webResource req = respondRequest(newSock, cmdList);
 
@@ -126,7 +133,7 @@ CommandList *parseRequest(char *request)
     return globalCmdList;
 }
 
-webResource respondRequest(int newSock, CommandList* cmdList)
+webResource respondRequest(int newSock, CommandList *cmdList)
 {
     char response[MAX_BUFFER_SIZE];
     ssize_t bytes_enviados;
