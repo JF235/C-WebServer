@@ -5,8 +5,8 @@
 
 #define MAX_BUFFER_SIZE 2048
 
-#define MAX_NUMBER_CHLD 2
-#define SERVER_READ_TIMEOUT_MS 10*1000 // [penultimo digito do RA] + 3
+#define MAX_THREADS 2
+#define SERVER_READ_TIMEOUT_MS 30 * 1000 // [penultimo digito do RA] + 3
 
 /*
 Processa uma conexão estabelecida no novo socket `newSock`.
@@ -22,7 +22,7 @@ int processConnection(int newSock, bool *keepalive);
 
 /*
 Cria um soquete e atribui o endereço de IP local com a porta
-passada como argumento. 
+passada como argumento.
 
 Retorna: Número do socket.
 */
@@ -37,11 +37,11 @@ Retorna: Número de bytes recebidos.
 ssize_t readRequest(int newSock, char *request);
 
 /*
-Faz o parse do buffer `request`
+Faz o parse do buffer `request` e retorna um ponteiro para a lista de comandos.
 */
-void parseRequest(char *request);
+CommandList *parseRequest(char *request);
 
-/* 
+/*
 Responde a requisição presente na variável `cmdList` e
 envia a resposta para o socket `newSock`.
 
@@ -50,7 +50,7 @@ Retorna a `struct webResource` com os campos:
 - httpCode: codigo da resposta
 - bytes: numero de bytes da resposta
 */
-webResource respondRequest(int newSock);
+webResource respondRequest(int newSock, CommandList *cmdList);
 
 /*
 Tratador do sinal SIGCHLD.

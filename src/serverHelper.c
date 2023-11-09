@@ -6,8 +6,12 @@ extern YY_BUFFER_STATE yy_scan_string(char *str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 extern int requests;
-CommandList *cmdList;
+CommandList *globalCmdList;
 extern char webspacePath[256];
+
+extern int workingThreads;
+extern pthread_mutex_t count_mutex;
+extern pthread_mutex_t parser_mutex;
 
 int processConnection(int newSock, bool *keepalive)
 {
@@ -19,7 +23,10 @@ int processConnection(int newSock, bool *keepalive)
         return status;
     }
 
-    parseRequest(request);
+    pthread_mutex_lock(&parser_mutex);
+    CommandList *cmdList = parseRequest(request);
+    pthread_mutex_unlock(&parser_mutex);
+    
 
     Command *cmd = findCommand("Connection", cmdList);
     char *optionName = cmd->optionList.head->optionName;
@@ -28,7 +35,7 @@ int processConnection(int newSock, bool *keepalive)
     else
         *keepalive = false;
 
-    webResource req = respondRequest(newSock);
+    webResource req = respondRequest(newSock, cmdList);
 
     freeCommandList(cmdList);
 
@@ -72,10 +79,16 @@ ssize_t readRequest(int newSock, char *request)
 
     if (numFds == 0)
     {
-        shutdown(newSock, SHUT_RDWR);
+        close(newSock);
         CHLD_TIMEDOUT_TRACE;
+
+        pthread_mutex_lock(&count_mutex);
+        workingThreads--;
+        pthread_mutex_unlock(&count_mutex);
+
         CHLD_EXITED_TRACE;
-        exit(EXIT_SUCCESS); // Fim do processo filho
+
+        pthread_exit(NULL);
     }
 
     TRY_ERR(bytes_received = read(newSock, request, MAX_BUFFER_SIZE));
@@ -100,9 +113,9 @@ ssize_t readRequest(int newSock, char *request)
     return bytes_received;
 }
 
-void parseRequest(char *request)
+CommandList *parseRequest(char *request)
 {
-    cmdList = createCommandList();
+    globalCmdList = createCommandList();
     YY_BUFFER_STATE buff = yy_scan_string(request);
     yyparse();
 
@@ -110,9 +123,10 @@ void parseRequest(char *request)
 
     // yylex_destroy();
     yy_delete_buffer(buff);
+    return globalCmdList;
 }
 
-webResource respondRequest(int newSock)
+webResource respondRequest(int newSock, CommandList* cmdList)
 {
     char response[MAX_BUFFER_SIZE];
     ssize_t bytes_enviados;
@@ -131,28 +145,6 @@ webResource respondRequest(int newSock)
     CHLDV_RESP_TRACE;
 
     return req;
-}
-
-void sigchld_handler(int signo)
-{
-    (void)signo;
-    requests--;
-    SERVER_ACCEPTING_TRACE;
-}
-
-void config_signals(void)
-{
-    // Define o tratador de sinal para SIGCHLD
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = sigchld_handler;
-
-    // Ativa a flag SA_RESTART
-    // Nesse caso, apos interrupcao por SIGCHLD, a chamada interrompida é reiniciada.
-    sa.sa_flags |= SA_RESTART;
-
-    // Install the signal handler for SIGINT
-    TRY_ERR(sigaction(SIGCHLD, &sa, NULL));
 }
 
 int send_response_overload(int sock)

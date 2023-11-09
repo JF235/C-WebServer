@@ -70,7 +70,7 @@
 
     #include "../includes/essentials.h"
 
-    extern CommandList *cmdList;
+    extern CommandList *globalCmdList;
 
 #line 76 "parserBison.tab.c"
 
@@ -1307,7 +1307,7 @@ yyreduce:
     {
   case 5:
 #line 24 "parserBison.y"
-                                   {cmdList->tail->optionList = *(yyvsp[0].optionList);free((yyvsp[0].optionList)); }
+                                   {globalCmdList->tail->optionList = *(yyvsp[0].optionList);free((yyvsp[0].optionList)); }
 #line 1312 "parserBison.tab.c"
     break;
 
@@ -1319,22 +1319,22 @@ yyreduce:
 
   case 7:
 #line 26 "parserBison.y"
-                                       {addCommand(cmdList, (yyvsp[-2].str));free((yyvsp[-2].str));
-                                        addOption(&(cmdList->tail->optionList), (yyvsp[-1].str)); free((yyvsp[-1].str));
-                                        addOption(&(cmdList->tail->optionList), (yyvsp[0].str)); free((yyvsp[0].str));
+                                       {addCommand(globalCmdList, (yyvsp[-2].str));free((yyvsp[-2].str));
+                                        addOption(&(globalCmdList->tail->optionList), (yyvsp[-1].str)); free((yyvsp[-1].str));
+                                        addOption(&(globalCmdList->tail->optionList), (yyvsp[0].str)); free((yyvsp[0].str));
                                         }
 #line 1327 "parserBison.tab.c"
     break;
 
   case 8:
 #line 31 "parserBison.y"
-                                       {addCommand(cmdList, (yyvsp[0].str));free((yyvsp[0].str));}
+                                       {addCommand(globalCmdList, (yyvsp[0].str));free((yyvsp[0].str));}
 #line 1333 "parserBison.tab.c"
     break;
 
   case 9:
 #line 32 "parserBison.y"
-                                       {addCommand(cmdList, (yyvsp[0].str));free((yyvsp[0].str));}
+                                       {addCommand(globalCmdList, (yyvsp[0].str));free((yyvsp[0].str));}
 #line 1339 "parserBison.tab.c"
     break;
 
