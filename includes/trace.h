@@ -33,7 +33,7 @@
 #ifdef ENABLE_CHLD_TRACE
     #define CHLD_CREATED_TRACE      printf("[%d] Conectou\n", getpid())
     #define CHLD_EXITED_TRACE       printf("[%d] Desconectou\n", getpid())
-    #define CHLD_WAIT_TRACE         printf("[%d] Aguardando dados\n", getpid());fflush(stdout)
+    #define CHLD_WAIT_TRACE         printf("[%d] Aguardando dados em %d\n", getpid(), newSock);fflush(stdout)
     #define CHLD_TIMEDOUT_TRACE     fprintf(stderr, "[%d] poll() timed out\n", getpid())
     #define CHLD_READ_TRACE         printf("[%d] Leitura concluída (%ld bytes)\n", getpid(), bytes_received)
     #define CHLD_RESP_TRACE         printf("[%d] %s - Mensagem enviada (%ld bytes).\n", getpid(), getHttpStatusText(req.httpCode), req.bytes)
@@ -56,9 +56,7 @@
 
 #ifdef ENABLE_PARENT_TRACE
     #define SERVER_START_TRACE printf("\n%s já está aceitando conexões de clientes HTTP em %d.\n\n", argv[0], port)
-    #define SERVER_ACCEPTING_TRACE printf("[%d] Aguardando conexões... %d filho(s) livre(s)\n", getpid(), MAX_NUMBER_CHLD - requests)
-    #define SERVER_FULL_TRACE printf("[%d] Aguardando conexões... (todos filhos ocupados)\n", getpid())
-    #define SERVER_OVERLOAD_TRACE printf("[%d] Mensagem de erro enviada\n", getpid())
+    #define SERVER_ACCEPTING_TRACE printf("[%d] Aguardando conexões\n", getpid())
 #else
     #define SERVER_START_TRACE
     #define SERVER_ACCEPTING_TRACE

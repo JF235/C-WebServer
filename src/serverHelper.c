@@ -72,10 +72,10 @@ ssize_t readRequest(int newSock, char *request)
 
     if (numFds == 0)
     {
-        shutdown(newSock, SHUT_RDWR);
+        close(newSock);
         CHLD_TIMEDOUT_TRACE;
         CHLD_EXITED_TRACE;
-        exit(EXIT_SUCCESS); // Fim do processo filho
+        return 0;
     }
 
     TRY_ERR(bytes_received = read(newSock, request, MAX_BUFFER_SIZE));

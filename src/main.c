@@ -13,7 +13,6 @@ int main(int argc, char **argv)
     int sock, newSock;
     bool keepalive = true;
     unsigned int clientSize;
-    pid_t chld_pid;
 
     if (argc != 2)
     {
@@ -24,8 +23,6 @@ int main(int argc, char **argv)
     // Config webspacePath
     config_webspace();
 
-    // Configura o tratamento de sinal para SIGCHLD
-    config_signals();
 
     unsigned short port = (unsigned short)atoi(argv[1]);
     sock = createAndBind(port);
@@ -39,44 +36,18 @@ int main(int argc, char **argv)
     {
         clientSize = sizeof(cliente);
 
-        if (requests < MAX_NUMBER_CHLD)
-            SERVER_ACCEPTING_TRACE;
-        else
-            SERVER_FULL_TRACE;
+        SERVER_ACCEPTING_TRACE;
 
-        TRY_ERR(
-            newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize));
+        TRY_ERR(newSock = accept(sock, (struct sockaddr *)&cliente, &clientSize));
 
-        if (requests < MAX_NUMBER_CHLD)
-        {
-            TRY_ERR(chld_pid = fork());
+        CHLD_CREATED_TRACE;
 
-            if (chld_pid == 0)
-            {
-                // Processo filho
-
-                CHLD_CREATED_TRACE;
-
-                while (keepalive)
-                    // Uma vez que a conexão foi aceita, processa a conexão.
-                    processConnection(newSock, &keepalive);
-
-                shutdown(newSock, SHUT_RDWR);
-                CHLD_EXITED_TRACE;
-                exit(EXIT_SUCCESS); // Fim do processo filho
-            }
-            else if (chld_pid > 0)
-            {
-                requests++;
-                close(newSock);
-            }
-        }
-        else
-        {
-            send_response_overload(newSock);
-            SERVER_OVERLOAD_TRACE;
-            shutdown(newSock, SHUT_RDWR);
-        }
+        while (keepalive)
+            // Uma vez que a conexão foi aceita, processa a conexão.
+            processConnection(newSock, &keepalive);
+        keepalive=true;
+        
+        close(newSock);
 
     } // END LOOP
 
