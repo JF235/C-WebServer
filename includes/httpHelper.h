@@ -4,6 +4,7 @@
 #include "essentials.h"
 
 #define HTTP_OK 200
+#define HTTP_UNAUTHORIZED 401
 #define HTTP_FORBIDDEN 403
 #define HTTP_NOT_FOUND 404
 #define HTTP_INTERNAL_SERVER_ERROR 500
