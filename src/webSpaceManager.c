@@ -37,14 +37,27 @@ webResource checkWebResource(const char *resource)
 
     // 1. Combinar caminho da web e recurso
     char resourcePath[MAX_PATH_SIZE];
-    
+
     // Full Resource Path
     snprintf(resourcePath, sizeof(resourcePath), "%s%s", webspacePath, resource);
 
-    if (!isSubfile(resourcePath, webspacePath))
+    // 1.1 Verificar se é válido
+    if (!isValid(resourcePath))
     {
-        // Arquivo não possui permissão de leitura, pois esta fora do webspace.
+        // Caminhos relativos são proibidos.
         resourceInfo.httpCode = HTTP_FORBIDDEN;
+        return resourceInfo;
+    }
+
+    // 1.2 Verificar se tem um htacces
+    char *htaccesPath = findHtaccess(resourcePath);
+    if (htaccesPath != NULL)
+    {
+        printf("htaccess encontrado: %s\n", htaccesPath);
+        // Caminhos relativos são proibidos.
+        resourceInfo.httpCode = HTTP_UNAUTHORIZED;
+        strncpy(resourceInfo.htaccessPath, htaccesPath, MAX_PATH_SIZE + 16);
+        free(htaccesPath);
         return resourceInfo;
     }
 
@@ -149,7 +162,7 @@ void httpRespond(char *response, webResource resourceInfo, http_request req)
 {
     switch (resourceInfo.httpCode)
     {
-    case 200: // OK
+    case HTTP_OK:
         // Requisição atendida
         printHeader(response, resourceInfo.resourcePath, req);
         if (req == HTTP_GET)
@@ -157,13 +170,19 @@ void httpRespond(char *response, webResource resourceInfo, http_request req)
             printResource(response, resourceInfo.resourcePath);
         }
         break;
-    case 404: // NOT FOUND
+    case HTTP_NOT_FOUND:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
             printErrorHeader(response, resourceInfo.httpCode);
         break;
-    case 403: // FORBIDENN
+    case HTTP_FORBIDDEN:
+        if (req == HTTP_TRACE || req == HTTP_OPTIONS)
+            printHeader(response, ".", req);
+        else
+            printErrorHeader(response, resourceInfo.httpCode);
+        break;
+    case HTTP_UNAUTHORIZED:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
@@ -241,14 +260,29 @@ void printErrorHeader(char *buffer, http_code code)
     char dateStr[128];
     strftime(dateStr, sizeof(dateStr), "%a %b %d %H:%M:%S %Y BRT", localtime(&now));
 
-    snprintf(buffer, MAX_BUFFER_SIZE,
-             "HTTP/1.1 %s\r\n"
-             "Date: %s\r\n"
-             "Server: JFCM Server 0.1\r\n"
-             "Content-Type: text/html\r\n"
-             "Connection: %s\r\n"
-             "\r\n",
-             getHttpStatusText(code), dateStr, "close");
+    if (code == HTTP_UNAUTHORIZED)
+    {
+        snprintf(buffer, MAX_BUFFER_SIZE,
+                 "HTTP/1.1 %s\r\n"
+                 "Date: %s\r\n"
+                 "Server: JFCM Server 0.1\r\n"
+                 "WWW-Authenticate: Basic realm=\"(realm)\"\r\n"
+                 "Content-Type: text/html\r\n"
+                 "Connection: %s\r\n"
+                 "\r\n",
+                 getHttpStatusText(code), dateStr, "close");
+    }
+    else
+    {
+        snprintf(buffer, MAX_BUFFER_SIZE,
+                 "HTTP/1.1 %s\r\n"
+                 "Date: %s\r\n"
+                 "Server: JFCM Server 0.1\r\n"
+                 "Content-Type: text/html\r\n"
+                 "Connection: %s\r\n"
+                 "\r\n",
+                 getHttpStatusText(code), dateStr, "close");
+    }
 }
 
 void printResource(char *response, char *resourcePath)
@@ -256,15 +290,15 @@ void printResource(char *response, char *resourcePath)
     struct stat fileInfo;
     int fd;
     int bytesRead;
-    
+
     // Lê informações do arquivo
-    TRY_ERR( stat(resourcePath, &fileInfo) );
+    TRY_ERR(stat(resourcePath, &fileInfo));
 
     // Abre o arquivo e lê o seu tamanho
-    TRY_ERR( fd = open(resourcePath, O_RDONLY) );
+    TRY_ERR(fd = open(resourcePath, O_RDONLY));
 
     // Crie um buffer com um tamanho adequado para o arquivo
-    char *buffer = (char *)malloc(2*fileInfo.st_size); // Esta linha me custou horas... 
+    char *buffer = (char *)malloc(2 * fileInfo.st_size); // Esta linha me custou horas...
     // LIÇÕES APRENDIDAS: USAR MALLOC NUNCA É TRIVIAL.
     // QUANDO FOR ALOCAR ESPAÇO PARA UM BUFFER, SEMPRE ALOCAR MAIS QUE O NECESSÁRIO.
     // VOCÊ IRÁ PRECISAR......
@@ -275,7 +309,7 @@ void printResource(char *response, char *resourcePath)
     }
 
     // Leia o arquivo completo e armazene no buffer
-    TRY_ERR( bytesRead = read(fd, buffer, fileInfo.st_size) );
+    TRY_ERR(bytesRead = read(fd, buffer, fileInfo.st_size));
     if (bytesRead == 0)
     {
         printf("Arquivo com tamanho 0");
@@ -291,26 +325,54 @@ void printResource(char *response, char *resourcePath)
     free(buffer);
 }
 
-int isSubfile(const char *filePath, const char *folderPath)
+int isValid(const char *filePath)
 {
-    char actualpath_file[MAX_PATH_SIZE];
-    char actualpath_webspace[MAX_PATH_SIZE];
-    if (realpath(filePath, actualpath_file) == NULL)
-        return -1;
-    if (realpath(folderPath, actualpath_webspace) == NULL)
-        return -1;
-
-    // Verifica se o caminho do webspace faz parte do caminho do arquivo.
-    if (strstr(actualpath_file, actualpath_webspace) != NULL)
-        return 1;
-    else
+    if (strstr(filePath, "/..") != NULL || strstr(filePath, "/.") != NULL)
         return 0;
+    return 1;
 }
 
-void config_webspace(){
+void config_webspace()
+{
     char cwdPath[256];
     // Current Workind Directory
     getcwd(cwdPath, sizeof(cwdPath));
     // Full Web Path
     snprintf(webspacePath, sizeof(webspacePath), "%s%s", cwdPath, WEBSPACE_REL_PATH);
+}
+
+char *findHtaccess(char *resourcePath)
+{
+    // Cria uma cópia do caminho do recurso
+    char currentPath[MAX_PATH_SIZE];
+    strncpy(currentPath, resourcePath, sizeof(currentPath));
+
+    printf("Searching...\n");
+
+    // Enquanto estiver dentro do webspace...
+    while (strlen(currentPath) >= strlen(webspacePath))
+    {
+        char htaccessPath[MAX_PATH_SIZE + 16];
+        snprintf(htaccessPath, sizeof(htaccessPath), "%s/.htaccess", currentPath);
+        printf("%s ", htaccessPath);
+
+        // Verifica se o arquivo .htaccess existe no diretório atual
+        if (access(htaccessPath, F_OK) != -1)
+        {
+            char *resultPath = (char *)malloc(MAX_PATH_SIZE);
+            strncpy(resultPath, htaccessPath, MAX_PATH_SIZE);
+            printf("encontrado\n");
+            return resultPath;
+        }
+
+        printf("não encontrado\n");
+        // Remove o último diretório do caminho
+        char *lastSlash = strrchr(currentPath, '/');
+        if (lastSlash != NULL)
+            *lastSlash = '\0';
+        else
+            break; // Se não houver mais diretórios, interrompe a busca
+    }
+
+    return NULL;
 }

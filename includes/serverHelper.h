@@ -6,7 +6,7 @@
 #define MAX_BUFFER_SIZE 2048
 
 #define MAX_THREADS 2
-#define SERVER_READ_TIMEOUT_MS 30 * 1000 // [penultimo digito do RA] + 3
+#define SERVER_READ_TIMEOUT_MS 7 * 1000 // [penultimo digito do RA] + 3
 
 /*
 Processa uma conexão estabelecida no novo socket `newSock`.

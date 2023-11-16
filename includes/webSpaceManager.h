@@ -16,6 +16,7 @@ webResource:
 typedef struct webResource
 {
     char resourcePath[MAX_PATH_SIZE + 16];
+    char htaccessPath[MAX_PATH_SIZE + 16];
     http_request httpCode;
     ssize_t bytes;
 } webResource;
@@ -61,14 +62,25 @@ Faz a leitura do conteúdo presente no recurso indicado por `resourcePath` e env
 void printResource(char *response, char *resourcePath);
 
 /* 
-Verifica se o arquivo de caminho `filePath` é um subarquivo contido na pasta de caminho `folderPath`.
+Verifica se o arquivo de caminho `filePath` não contém referências
+relativas de diretório com `.` ou `..`
 */
-int isSubfile(const char *filePath, const char *folderPath) ;
+int isValid(const char *filePath);
 
 /*
 Seta a variável global `webspacePath` que contém o caminho absoluto 
 do webspace.
 */
 void config_webspace();
+
+/*
+Busca o arquivo htaccess e retorna o seu caminho caso
+tenha sido encontrado.
+Retorna `NULL` caso não tenha sido encontrado.
+
+A string que contém o caminho é alocada dinamicamente,
+portano precisa ser liberada após uso com `free()`.
+*/
+char *findHtaccess(char *resourcePath);
 
 #endif
