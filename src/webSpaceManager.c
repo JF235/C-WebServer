@@ -393,12 +393,10 @@ char *findHtaccess(char *resourcePath)
 bool authenticate(webResource resourceInfo, char *auth)
 {
     bool authenticated = false;
+    char decodedAuth[512];
 
-    // Converte char *auth (base64 p/ ascii)
-    char *decoded = b64_decode(auth, strlen(auth));
-    // Decodificar e encriptar senha
-    // Codificar
-    free(decoded);
+    cryptPassword(auth, decodedAuth);
+    //printf("decodedAuth: %s\n", decodedAuth);
 
     // Obtém o caminho do passwd
     FILE *htaccessFile = fopen(resourceInfo.htaccessPath, "r");
@@ -423,7 +421,7 @@ bool authenticate(webResource resourceInfo, char *auth)
     fclose(htaccessFile);
 
     // Busca a autenticação no arquivo .passwd
-    printf("Verificar em %s\n", htpasswdFileName);
+    //printf("Verificar em %s\n", htpasswdFileName);
     FILE *htpasswdFile = fopen(htpasswdFileName, "r");
 
     if (htpasswdFile == NULL)
@@ -440,7 +438,7 @@ bool authenticate(webResource resourceInfo, char *auth)
     while ((read = getline(&line, &len, htpasswdFile)) != -1)
     {
         line[strcspn(line, "\n")] = 0; // Remove a quebra de linha
-        if (strcmp(auth, line) == 0)
+        if (strcmp(decodedAuth, line) == 0)
         {
             authenticated = true;
             break;
@@ -450,4 +448,32 @@ bool authenticate(webResource resourceInfo, char *auth)
     free(line);
     fclose(htpasswdFile);
     return authenticated;
+}
+
+
+void cryptPassword(char *auth, char *decodedAuth){
+// Decodifica base64
+    char *decoded = b64_decode(auth, strlen(auth));
+    char *authCopy = strdup(decoded);
+
+    // Separa usuário e senha
+    char *saveptr;
+    char *token = strtok_r(authCopy, ":", &saveptr);
+
+    // Obtém usuário
+    char *username = strdup(token);
+    
+    // Obtém senha
+    token = strtok_r(NULL, ":", &saveptr);
+    char *password = strdup(token);
+
+    // Criptografa a senha com SHA256 e salt 40
+    char *cryptedPassword = crypt(password, "$5$40$");
+
+    snprintf(decodedAuth, 512, "%s:%s", username, cryptedPassword);
+    
+    free(decoded);
+    free(authCopy);
+    free(username);
+    free(password);
 }
