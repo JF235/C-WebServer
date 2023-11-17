@@ -44,6 +44,10 @@ int processConnection(int newSock, bool *keepalive)
 
     webResource req = respondRequest(newSock, cmdList);
 
+    if (req.httpCode == HTTP_UNAUTHORIZED){
+        *keepalive = false;
+    }
+
     freeCommandList(cmdList);
 
     CHLD_RESP_TRACE;

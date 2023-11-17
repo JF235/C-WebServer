@@ -88,4 +88,11 @@ Devolve true se os dados de auth (base64) batem com o elemento guardado em .htpa
 */
 bool authenticate(webResource resourceInfo, char *auth);
 
+/*
+Encripta a senha contida na autenticacao de auth (em base64)
+e devolve a versão decodificada em decodedAuth com
+user:cryptedpasswd
+*/
+void cryptPassword(char *auth, char *decodedAuth);
+
 #endif
