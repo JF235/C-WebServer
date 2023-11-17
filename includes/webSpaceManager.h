@@ -26,7 +26,7 @@ Processa uma requisição HTTP `reqText` (GET, HEAD, OPTIONS, TRACE)
 Associada ao espaço web com caminho `webPath` e caminho de recurso `resource`.
 O resultado será encaminhado para stdout por padrão.
 */
-webResource httpRequest(char *response, char *resource, char *reqText);
+webResource httpRequest(char *response, char *resource, char *reqText, char *auth);
 
 /*
 Imprime a resposta HTTP associada ao recurso `resourceInfo` e requisição `req`.
@@ -44,7 +44,7 @@ Função que faz a busca pelo recurso endereçado pelo espaço web `webPath` e c
 
 Retorna `webResource` com código HTTP e caminho do recurso, caso esteja acessível.
 */
-webResource checkWebResource(const char *resource);
+webResource checkWebResource(const char *resource, bool authenticated);
 
 /* 
 Imprime o header de uma resposta associado ao código `code`, recurso `resourcePath` e requisição do tipo `req`.
@@ -82,5 +82,10 @@ A string que contém o caminho é alocada dinamicamente,
 portano precisa ser liberada após uso com `free()`.
 */
 char *findHtaccess(char *resourcePath);
+
+/*
+Devolve true se os dados de auth (base64) batem com o elemento guardado em .htpasswd apontado pelo arquivo .htaccess (o caminho desse arquivo está em `resourceInfo.htacces`)
+*/
+bool authenticate(webResource resourceInfo, char *auth);
 
 #endif
