@@ -28,4 +28,6 @@
 #include "errorHandling.h"
 #include "trace.h"
 
+#include "b64.h"
+
 #endif

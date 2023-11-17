@@ -22,8 +22,9 @@ void *threadFunction(void *arg)
 
     CHLD_CREATED_TRACE;
 
-    while (keepalive)
+    while (keepalive){
         processConnection(newSock, &keepalive);
+    }
 
     close(newSock);
     free(arg);

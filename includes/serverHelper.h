@@ -3,7 +3,7 @@
 
 #include "essentials.h"
 
-#define MAX_BUFFER_SIZE 2048
+#define MAX_BUFFER_SIZE 4096
 
 #define MAX_THREADS 2
 #define SERVER_READ_TIMEOUT_MS 7 * 1000 // [penultimo digito do RA] + 3

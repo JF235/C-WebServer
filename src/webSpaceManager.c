@@ -2,15 +2,26 @@
 
 char webspacePath[512];
 
-webResource httpRequest(char *response, char *resource, char *reqText)
+webResource httpRequest(char *response, char *resource, char *reqText, char *auth)
 {
     // Obtém o número da requisição
     http_request req = httpReqText2Number(reqText);
 
     // Verifica se o recurso existe e é acessível (Atividade 5)
-    webResource resourceInfo = checkWebResource(resource);
+    webResource resourceInfo = checkWebResource(resource, false);
     if (req == -1)
+    {
         resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
+    }
+    else if (resourceInfo.httpCode == HTTP_UNAUTHORIZED && auth != NULL)
+    {
+        bool authenticated;
+        authenticated = authenticate(resourceInfo, auth);
+        if (authenticated)
+        {
+            resourceInfo = checkWebResource(resource, true);
+        }
+    }
 
     httpRespond(response, resourceInfo, req);
 
@@ -31,7 +42,7 @@ webResource httpRequest(char *response, char *resource, char *reqText)
     return resourceInfo;
 }
 
-webResource checkWebResource(const char *resource)
+webResource checkWebResource(const char *resource, bool authenticated)
 {
     webResource resourceInfo;
 
@@ -51,10 +62,9 @@ webResource checkWebResource(const char *resource)
 
     // 1.2 Verificar se tem um htacces
     char *htaccesPath = findHtaccess(resourcePath);
-    if (htaccesPath != NULL)
+    if (htaccesPath != NULL && !authenticated)
     {
-        printf("htaccess encontrado: %s\n", htaccesPath);
-        // Caminhos relativos são proibidos.
+        // printf("htaccess encontrado: %s\n", htaccesPath);
         resourceInfo.httpCode = HTTP_UNAUTHORIZED;
         strncpy(resourceInfo.htaccessPath, htaccesPath, MAX_PATH_SIZE + 16);
         free(htaccesPath);
@@ -174,7 +184,10 @@ void httpRespond(char *response, webResource resourceInfo, http_request req)
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
+        {
             printErrorHeader(response, resourceInfo.httpCode);
+            printResource(response, "web/notfound.html");
+        }
         break;
     case HTTP_FORBIDDEN:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
@@ -347,26 +360,26 @@ char *findHtaccess(char *resourcePath)
     char currentPath[MAX_PATH_SIZE];
     strncpy(currentPath, resourcePath, sizeof(currentPath));
 
-    printf("Searching...\n");
+    // printf("Searching...\n");
 
     // Enquanto estiver dentro do webspace...
     while (strlen(currentPath) >= strlen(webspacePath))
     {
         char htaccessPath[MAX_PATH_SIZE + 16];
         snprintf(htaccessPath, sizeof(htaccessPath), "%s/.htaccess", currentPath);
-        printf("%s ", htaccessPath);
+        // printf("%s ", htaccessPath);
 
         // Verifica se o arquivo .htaccess existe no diretório atual
         if (access(htaccessPath, F_OK) != -1)
         {
             char *resultPath = (char *)malloc(MAX_PATH_SIZE);
             strncpy(resultPath, htaccessPath, MAX_PATH_SIZE);
-            printf("encontrado\n");
+            // printf("encontrado\n");
             return resultPath;
         }
 
-        printf("não encontrado\n");
-        // Remove o último diretório do caminho
+        // printf("não encontrado\n");
+        //  Remove o último diretório do caminho
         char *lastSlash = strrchr(currentPath, '/');
         if (lastSlash != NULL)
             *lastSlash = '\0';
@@ -375,4 +388,66 @@ char *findHtaccess(char *resourcePath)
     }
 
     return NULL;
+}
+
+bool authenticate(webResource resourceInfo, char *auth)
+{
+    bool authenticated = false;
+
+    // Converte char *auth (base64 p/ ascii)
+    char *decoded = b64_decode(auth, strlen(auth));
+    // Decodificar e encriptar senha
+    // Codificar
+    free(decoded);
+
+    // Obtém o caminho do passwd
+    FILE *htaccessFile = fopen(resourceInfo.htaccessPath, "r");
+    if (htaccessFile == NULL)
+    {
+        perror("Erro ao abrir o arquivo .htaccess");
+        return false;
+    }
+
+    char htpasswdFileName[100];
+    if (fgets(htpasswdFileName, sizeof(htpasswdFileName), htaccessFile) != NULL)
+    {
+        htpasswdFileName[strcspn(htpasswdFileName, "\n")] = 0; // Remove a quebra de linha
+    }
+    else
+    {
+        perror("Erro ao ler o nome do arquivo .htpasswd");
+        fclose(htaccessFile);
+        return false;
+    }
+
+    fclose(htaccessFile);
+
+    // Busca a autenticação no arquivo .passwd
+    printf("Verificar em %s\n", htpasswdFileName);
+    FILE *htpasswdFile = fopen(htpasswdFileName, "r");
+
+    if (htpasswdFile == NULL)
+    {
+        perror("Erro ao abrir o arquivo .htpasswd");
+        return false;
+    }
+
+    // Compara decoded com cada linha do arquivo .htpasswd usando getline()
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&line, &len, htpasswdFile)) != -1)
+    {
+        line[strcspn(line, "\n")] = 0; // Remove a quebra de linha
+        if (strcmp(auth, line) == 0)
+        {
+            authenticated = true;
+            break;
+        }
+    }
+
+    free(line);
+    fclose(htpasswdFile);
+    return authenticated;
 }

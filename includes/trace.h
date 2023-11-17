@@ -24,7 +24,7 @@
 
 // Trace do parser
 #ifdef ENABLE_PARSER_TRACE
-    #define PARSER_TRACE printf("============================== PARSER CMD LIST ==============================\n\n"); printCommandList(cmdList); printf("\n\n")
+    #define PARSER_TRACE printf("============================== PARSER CMD LIST ==============================\n\n"); printCommandList(globalCmdList); printf("\n\n")
 #else
     #define PARSER_TRACE 
 #endif
@@ -58,7 +58,7 @@
     #define SERVER_START_TRACE printf("\n%s já está aceitando conexões de clientes HTTP em %d.\n\n", argv[0], port)
     #define SERVER_ACCEPTING_TRACE printf("[%ld] Aguardando conexões... %d filho(s) livre(s)\n", pthread_self(), MAX_THREADS - workingThreads)
     #define SERVER_FULL_TRACE printf("[%ld] Aguardando conexões... (todos filhos ocupados)\n", pthread_self())
-    #define SERVER_OVERLOAD_TRACE printf("[%ld] Mensagem de erro enviada\n", pthread_self())
+    #define SERVER_OVERLOAD_TRACE printf("[%ld] Mensagem de overload enviada\n", pthread_self())
 #else
     #define SERVER_START_TRACE
     #define SERVER_ACCEPTING_TRACE

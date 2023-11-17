@@ -18,9 +18,9 @@ int processConnection(int newSock, bool *keepalive)
     char request[MAX_BUFFER_SIZE];
 
     int status = (int)readRequest(newSock, request);
-    if (status == 0)
+    if (status == 0)  // Encerrou a conexao com EOF
     {
-        *keepalive = false; // Encerrou a conexao com EOF
+        *keepalive = false;
         return status;
     }
 
@@ -74,13 +74,13 @@ ssize_t readRequest(int newSock, char *request)
     int numFds;
     ssize_t bytes_received;
 
-    CHLD_WAIT_TRACE;
-
     struct pollfd fds[10];
     memset(fds, 0, sizeof(fds));
     fds[0].fd = newSock;
     fds[0].events = POLLIN;
     int timeout = SERVER_READ_TIMEOUT_MS;
+
+    CHLD_WAIT_TRACE;
 
     TRY_ERR(numFds = poll(fds, 10, timeout));
 
@@ -141,7 +141,19 @@ webResource respondRequest(int newSock, CommandList *cmdList)
     char *requestMethod = cmdList->head->commandName;
     char *resourcePath = cmdList->head->optionList.head->optionName;
 
-    webResource req = httpRequest(response, resourcePath, requestMethod);
+    // check for authorization
+    Command *cmd = findCommand("Authorization", cmdList);
+    char *auth;
+
+    if (cmd == NULL){
+        auth = NULL;
+    } else {
+        auth = cmd->optionList.head->optionName;
+        auth = auth + 6; // Remove prefix
+        //printf("auth: %s\n", auth);
+    }
+
+    webResource req = httpRequest(response, resourcePath, requestMethod, auth);
 
     // Envia a response para o cliente
     // Envia o byte com a terminação '\0'
