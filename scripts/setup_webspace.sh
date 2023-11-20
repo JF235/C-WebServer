@@ -23,9 +23,6 @@ webspacepath="$PWD/web/meu-webspace"
 passwdpath="$PWD/web/.htpasswd"
 passwdpath1="$PWD/web/senhas1/.htpasswd"
 
-if [ -e "$webspacepath/dir-protegido1/dir-semvarr" ]; then
-    chmod ugo+x "$webspacepath/dir-protegido1/dir-semvarr"
-fi
 rm -rf $webspacepath
 
 if [ "$1" != "-d" ]; then
@@ -57,20 +54,18 @@ if [ "$1" != "-d" ]; then
     touch .htaccess
     echo $passwdpath > .htaccess
     criar_html protegido1.html
-    mkdir dir-semvarr # sem varredura
+    mkdir dir-aberto2
 
-    # Pasta meu-webspace/dir-protegido1/dir-semvarr
-    cd dir-semvarr
+    # Pasta meu-webspace/dir-protegido1/dir-aberto2
+    cd dir-aberto2
     criar_html "index.html"
     mkdir dir-protegido3
 
-    # Pasta meu-webspace/dir-protegido1/dir-semvarr/dir-protegido3
+    # Pasta meu-webspace/dir-protegido1/dir-aberto2/dir-protegido3
     cd dir-protegido3
     touch .htaccess
     echo $passwdpath1 > .htaccess
     criar_html "superprotegido.html"
-
-    chmod ugo-x "$webspacepath/dir-protegido1/dir-semvarr"
 else
     echo "Webspace removido."
 fi

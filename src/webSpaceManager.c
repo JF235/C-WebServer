@@ -396,7 +396,10 @@ bool authenticate(webResource resourceInfo, char *auth)
     char decodedAuth[512];
 
     cryptPassword(auth, decodedAuth);
-    //printf("decodedAuth: %s\n", decodedAuth);
+    if (!strcmp(decodedAuth, "NULL")){
+        // Faltou usuário e/ou senha
+        return false;
+    }
 
     // Obtém o caminho do passwd
     FILE *htaccessFile = fopen(resourceInfo.htaccessPath, "r");
@@ -421,7 +424,6 @@ bool authenticate(webResource resourceInfo, char *auth)
     fclose(htaccessFile);
 
     // Busca a autenticação no arquivo .passwd
-    printf("Verificar em %s\n", htpasswdFileName);
     FILE *htpasswdFile = fopen(htpasswdFileName, "r");
 
     if (htpasswdFile == NULL)
@@ -459,12 +461,20 @@ void cryptPassword(char *auth, char *decodedAuth){
     // Separa usuário e senha
     char *saveptr;
     char *token = strtok_r(authCopy, ":", &saveptr);
+    if (token == NULL){
+        snprintf(decodedAuth, 512, "NULL");
+        return;
+    }
 
     // Obtém usuário
     char *username = strdup(token);
     
     // Obtém senha
     token = strtok_r(NULL, ":", &saveptr);
+    if (token == NULL){
+        snprintf(decodedAuth, 512, "NULL");
+        return;
+    }
     char *password = strdup(token);
 
     // Criptografa a senha com SHA256 e salt 40
