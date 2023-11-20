@@ -421,7 +421,7 @@ bool authenticate(webResource resourceInfo, char *auth)
     fclose(htaccessFile);
 
     // Busca a autenticação no arquivo .passwd
-    //printf("Verificar em %s\n", htpasswdFileName);
+    printf("Verificar em %s\n", htpasswdFileName);
     FILE *htpasswdFile = fopen(htpasswdFileName, "r");
 
     if (htpasswdFile == NULL)
