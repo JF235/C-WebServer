@@ -154,7 +154,6 @@ webResource respondRequest(int newSock, CommandList *cmdList)
     } else {
         auth = cmd->optionList.head->optionName;
         auth = auth + 6; // Remove prefix
-        //printf("auth: %s\n", auth);
     }
 
     webResource req = httpRequest(response, resourcePath, requestMethod, auth);
