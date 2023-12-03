@@ -28,6 +28,7 @@
 #include "serverHelper.h"
 #include "errorHandling.h"
 #include "trace.h"
+#include "authentication.h"
 
 #include "b64.h"
 

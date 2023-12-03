@@ -115,6 +115,8 @@ http_code httpReqText2Number(const char *reqText)
         return HTTP_OPTIONS;
     else if (!strcmp(reqText, "TRACE"))
         return HTTP_TRACE;
+    else if (!strcmp(reqText, "POST"))
+        return HTTP_POST;
     else
         return -1;
 }

@@ -18,7 +18,7 @@ int processConnection(int newSock, bool *keepalive)
     char request[MAX_BUFFER_SIZE];
 
     int status = (int)readRequest(newSock, request);
-    if (status == 0)  // Encerrou a conexao com EOF
+    if (status == 0) // Encerrou a conexao com EOF
     {
         *keepalive = false;
         return status;
@@ -44,7 +44,8 @@ int processConnection(int newSock, bool *keepalive)
 
     webResource req = respondRequest(newSock, cmdList);
 
-    if (req.httpCode == HTTP_UNAUTHORIZED){
+    if (req.httpCode == HTTP_UNAUTHORIZED)
+    {
         *keepalive = false;
     }
 
@@ -149,13 +150,18 @@ webResource respondRequest(int newSock, CommandList *cmdList)
     Command *cmd = findCommand("Authorization", cmdList);
     char *auth;
 
-    if (cmd == NULL){
+    if (cmd == NULL)
+    {
         auth = NULL;
-    } else {
+    }
+    else
+    {
         auth = cmd->optionList.head->optionName;
         auth = auth + 6; // Remove prefix
     }
 
+    // Processa a requisição e gera uma resposta armazenada no buffer
+    // response
     webResource req = httpRequest(response, resourcePath, requestMethod, auth);
 
     // Envia a response para o cliente

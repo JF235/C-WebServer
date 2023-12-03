@@ -84,15 +84,12 @@ portano precisa ser liberada após uso com `free()`.
 char *findHtaccess(char *resourcePath);
 
 /*
-Devolve true se os dados de auth (base64) batem com o elemento guardado em .htpasswd apontado pelo arquivo .htaccess (o caminho desse arquivo está em `resourceInfo.htacces`)
-*/
-bool authenticate(webResource resourceInfo, char *auth);
+Verifica se o caminho atual faz menção a um recurso especial
+que está fora do webspace.
 
-/*
-Encripta a senha contida na autenticacao de auth (em base64)
-e devolve a versão decodificada em decodedAuth com
-user:cryptedpasswd
+Arquivs especiais:
+- forms.html
 */
-void cryptPassword(char *auth, char *decodedAuth);
+void checkSpecialResource(char *resourcePath, char *specialPath);
 
 #endif
