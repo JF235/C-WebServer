@@ -15,6 +15,7 @@
 #define HTTP_HEAD 1
 #define HTTP_OPTIONS 2
 #define HTTP_TRACE 3
+#define HTTP_POST 4
 
 /* 
 Associação http_code:

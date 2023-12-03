@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alteração de Senha</title>
+</head>
+
+<body>
+    <h1 style="text-align: center;">
+        Server JFCM
+    </h1>
+    <h2 style="text-align: center;">
+        Formulário para alteração de senha
+    </h2>
+    <form method="post">
+        <table style="text-align: left; margin-left: auto; margin-right: auto;">
+            <tbody>
+                <tr>
+                    <td style="text-align: right;">
+                        Nome do usuário:
+                    </td>
+                    <td style="text-align: center;">
+                        <input name="nomeusuario" size="12" maxlength="30" type="text">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">
+                        Senha antiga:
+                    </td>
+                    <td>
+                        <input name="senha-antiga" size="8" maxlength="8" type="password">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">
+                        Senha nova:
+                    </td>
+                    <td>
+                        <input name="senha-nova" size="8" maxlength="8" type="password">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">
+                        Confirmação de Senha nova:
+                    </td>
+                    <td>
+                        <input name="c-senha-nova" size="8" maxlength="8" type="password">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <div style="text-align: center;">
+            <input name="confirmar" value="Enviar" type="submit">
+        </div>
+    </form>
+</body>
+
+</html>

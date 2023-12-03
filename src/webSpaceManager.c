@@ -4,23 +4,32 @@ char webspacePath[512];
 
 webResource httpRequest(char *response, char *resource, char *reqText, char *auth)
 {
+    webResource resourceInfo;
+
     // Obtém o número da requisição
     http_request req = httpReqText2Number(reqText);
 
-    // Verifica se o recurso existe e é acessível (Atividade 5)
-    webResource resourceInfo = checkWebResource(resource, false);
     if (req == -1)
     {
         resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
     }
-    else if (resourceInfo.httpCode == HTTP_UNAUTHORIZED && auth != NULL)
+    else if (req == HTTP_GET)
     {
-        bool authenticated;
-        authenticated = authenticate(resourceInfo, auth);
-        if (authenticated)
+        // Verifica se o recurso existe e é acessível (Atividade 5)
+        resourceInfo = checkWebResource(resource, false);
+        if (resourceInfo.httpCode == HTTP_UNAUTHORIZED && auth != NULL)
         {
-            resourceInfo = checkWebResource(resource, true);
+            bool authenticated;
+            authenticated = authenticate(resourceInfo, auth);
+            if (authenticated)
+            {
+                resourceInfo = checkWebResource(resource, true);
+            }
         }
+    }
+    else if (req == HTTP_POST)
+    {
+        resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
     }
 
     httpRespond(response, resourceInfo, req);
@@ -78,8 +87,20 @@ webResource checkWebResource(const char *resource, bool authenticated)
         if (errno == ENOENT)
         {
             // Arquivo não encontrado
-            resourceInfo.httpCode = HTTP_NOT_FOUND;
-            return resourceInfo;
+            char specialPath[MAX_PATH_SIZE] = {0};
+
+            // Verfica se é um arquivo especial (fora do webspace)
+            checkSpecialResource(resourcePath, specialPath);
+            if (strlen(specialPath) != 0 && htaccesPath != NULL) {
+                // É um arquivo especial
+                resourceInfo.httpCode = HTTP_OK;
+                strncpy(resourceInfo.resourcePath, specialPath, MAX_PATH_SIZE);
+                return resourceInfo;
+            } else {
+                // Arquivo inexistente
+                resourceInfo.httpCode = HTTP_NOT_FOUND;
+                return resourceInfo;
+            }
         }
         else
         {
@@ -224,7 +245,7 @@ void printHeader(char *buffer, const char *resourcePath, http_request req)
         if (stat(resourcePath, &fileInfo) == -1)
         {
             perror("Erro ao obter informações do arquivo");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         strftime(dateLastModified, sizeof(dateLastModified), "%a %b %d %H:%M:%S %Y BRT", localtime(&fileInfo.st_mtime));
 
@@ -390,100 +411,13 @@ char *findHtaccess(char *resourcePath)
     return NULL;
 }
 
-bool authenticate(webResource resourceInfo, char *auth)
-{
-    bool authenticated = false;
-    char decodedAuth[512];
 
-    cryptPassword(auth, decodedAuth);
-    if (!strcmp(decodedAuth, "NULL")){
-        // Faltou usuário e/ou senha
-        return false;
-    }
-
-    // Obtém o caminho do passwd
-    FILE *htaccessFile = fopen(resourceInfo.htaccessPath, "r");
-    if (htaccessFile == NULL)
-    {
-        perror("Erro ao abrir o arquivo .htaccess");
-        return false;
-    }
-
-    char htpasswdFileName[100];
-    if (fgets(htpasswdFileName, sizeof(htpasswdFileName), htaccessFile) != NULL)
-    {
-        htpasswdFileName[strcspn(htpasswdFileName, "\n")] = 0; // Remove a quebra de linha
-    }
-    else
-    {
-        perror("Erro ao ler o nome do arquivo .htpasswd");
-        fclose(htaccessFile);
-        return false;
-    }
-
-    fclose(htaccessFile);
-
-    // Busca a autenticação no arquivo .passwd
-    FILE *htpasswdFile = fopen(htpasswdFileName, "r");
-
-    if (htpasswdFile == NULL)
-    {
-        perror("Erro ao abrir o arquivo .htpasswd");
-        return false;
-    }
-
-    // Compara decoded com cada linha do arquivo .htpasswd usando getline()
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-
-    while ((read = getline(&line, &len, htpasswdFile)) != -1)
-    {
-        line[strcspn(line, "\n")] = 0; // Remove a quebra de linha
-        if (strcmp(decodedAuth, line) == 0)
-        {
-            authenticated = true;
-            break;
+void checkSpecialResource(char *resourcePath, char *specialPath){
+    char *lastSlash = strrchr(resourcePath, '/');
+    if (lastSlash != NULL){
+        char *specialResource = lastSlash + 1;
+        if (!strcmp(specialResource, "forms.html")){
+            strncpy(specialPath, "web/forms.html", MAX_PATH_SIZE);
         }
     }
-
-    free(line);
-    fclose(htpasswdFile);
-    return authenticated;
-}
-
-
-void cryptPassword(char *auth, char *decodedAuth){
-// Decodifica base64
-    char *decoded = b64_decode(auth, strlen(auth));
-    char *authCopy = strdup(decoded);
-
-    // Separa usuário e senha
-    char *saveptr;
-    char *token = strtok_r(authCopy, ":", &saveptr);
-    if (token == NULL){
-        snprintf(decodedAuth, 512, "NULL");
-        return;
-    }
-
-    // Obtém usuário
-    char *username = strdup(token);
-    
-    // Obtém senha
-    token = strtok_r(NULL, ":", &saveptr);
-    if (token == NULL){
-        snprintf(decodedAuth, 512, "NULL");
-        return;
-    }
-    char *password = strdup(token);
-
-    // Criptografa a senha com SHA256 e salt 40
-    char *cryptedPassword = crypt(password, "$5$40$");
-
-    snprintf(decodedAuth, 512, "%s:%s", username, cryptedPassword);
-    
-    free(decoded);
-    free(authCopy);
-    free(username);
-    free(password);
 }
