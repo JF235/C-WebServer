@@ -160,9 +160,11 @@ webResource respondRequest(int newSock, CommandList *cmdList)
         auth = auth + 6; // Remove prefix
     }
 
+    char *newCredentials = cmdList->tail->commandName;
+
     // Processa a requisição e gera uma resposta armazenada no buffer
     // response
-    webResource req = httpRequest(response, resourcePath, requestMethod, auth);
+    webResource req = httpRequest(response, resourcePath, requestMethod, auth, newCredentials);
 
     // Envia a response para o cliente
     // Envia o byte com a terminação '\0'
@@ -192,4 +194,60 @@ int send_response_overload(int sock)
     TRY_ERR(bytes_enviados = write(sock, htmlContent, strlen(htmlContent) + 1)); // Envia o byte com a terminação '\0'
 
     return (int)bytes_enviados;
+}
+
+void postHandler(webResource *resourceInfo, char *newCredentials)
+{
+    // Separar as credenciais
+    char username[50];
+    char oldPass[50];
+    char newPass[50];
+    char cnewPass[50];
+    char dummy[64];
+
+    // TODO: Nome genérico de formulário
+    TRY_ERR(sscanf(newCredentials, "%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49s",
+                   dummy, username, 
+                   dummy, oldPass, 
+                   dummy, newPass,
+                   dummy, cnewPass, 
+                   dummy, dummy));
+
+    // verificar as credenciais
+    if (strcmp(newPass, cnewPass))
+    {
+        resourceInfo->httpCode = HTTP_UNAUTHORIZED;
+        return;
+    }
+
+    // Autenticar dados
+    char oldAuth[512];
+    char oldCryptedAuth[512];
+    snprintf(oldAuth, 512, "%s:%s", username, oldPass);
+    cryptPassword(oldAuth, oldCryptedAuth);
+
+    char newAuth[512];
+    char newCryptedAuth[512];
+    snprintf(newAuth, 512, "%s:%s", username, newPass);
+    cryptPassword(newAuth, newCryptedAuth);
+
+    int result = updatePassword(*resourceInfo, oldCryptedAuth, newCryptedAuth);
+    if (result == 0)
+    {
+        // Mudança OK
+        resourceInfo->httpCode = HTTP_OK;
+        strcpy(resourceInfo->resourcePath, "web/okAuth.html");
+    }
+    else if (result == -1)
+    {
+        // Autenticação errada
+        resourceInfo->httpCode = HTTP_OK;
+        strcpy(resourceInfo->resourcePath, "web/erroAuth.html");
+    }
+    else if (result == -2 || result == -3)
+    {
+        // Arquivo de senha não encontrado (-2)
+        // Problema com os arquivos de senha (-3)
+        resourceInfo->httpCode = HTTP_INTERNAL_SERVER_ERROR;
+    }
 }

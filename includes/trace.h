@@ -2,7 +2,7 @@
 #define TRACE_H
 
 // Exibe o resultado do parser
-//#define ENABLE_PARSER_TRACE
+#define ENABLE_PARSER_TRACE
 
 // Exibe o comportamento do processo filho
 // - Quando um cliente conectou/desconectou
