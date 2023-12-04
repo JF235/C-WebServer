@@ -140,7 +140,7 @@ CommandList *parseRequest(char *request)
 
 webResource respondRequest(int newSock, CommandList *cmdList)
 {
-    char response[MAX_BUFFER_SIZE];
+    char *response = (char*)malloc(8*1024*1024);
     ssize_t bytes_enviados;
 
     char *requestMethod = cmdList->head->commandName;
@@ -168,12 +168,13 @@ webResource respondRequest(int newSock, CommandList *cmdList)
 
     // Envia a response para o cliente
     // Envia o byte com a terminação '\0'
-    TRY_ERR(bytes_enviados = write(newSock, response, strlen(response) + 1));
-
-    req.bytes = bytes_enviados;
+    TRY_ERR(bytes_enviados = write(newSock, response, req.bytes));
+    if (bytes_enviados != req.bytes){
+        fprintf(stderr,"Erro na escrita ao socket. Bytes faltando.\n");
+    }
 
     CHLDV_RESP_TRACE;
-
+    free(response);
     return req;
 }
 

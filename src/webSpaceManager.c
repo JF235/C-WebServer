@@ -47,7 +47,7 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
         }
     }
 
-    httpRespond(response, resourceInfo, req);
+    resourceInfo.bytes = httpRespond(response, resourceInfo, req);
 
 #if LOG
     FILE *logfile = freopen(logFileName, "a", stdout);
@@ -79,7 +79,7 @@ webResource checkWebResource(const char *resource, bool authenticated)
     // 1.1 Verificar se é válido
     if (!isValid(resourcePath))
     {
-        // Caminhos relativos são proibidos.
+        // Caminhos relativos (com /. ou /..) são proibidos.
         resourceInfo.httpCode = HTTP_FORBIDDEN;
         return resourceInfo;
     }
@@ -207,16 +207,20 @@ webResource checkWebResource(const char *resource, bool authenticated)
     }
 }
 
-void httpRespond(char *response, webResource resourceInfo, http_request req)
+int httpRespond(char *response, webResource resourceInfo, http_request req)
 {
+    int responseSize = 0;
     switch (resourceInfo.httpCode)
     {
     case HTTP_OK:
         // Requisição atendida
         printHeader(response, resourceInfo.resourcePath, req);
+        responseSize = strlen(response); // Header size
         if (req == HTTP_GET || req == HTTP_POST)
         {
-            printResource(response, resourceInfo.resourcePath);
+            int resourceSize = printResource(response, resourceInfo.resourcePath);
+
+            responseSize += resourceSize;
         }
         break;
     case HTTP_NOT_FOUND:
@@ -227,26 +231,31 @@ void httpRespond(char *response, webResource resourceInfo, http_request req)
             printErrorHeader(response, resourceInfo.httpCode);
             printResource(response, "web/notfound.html");
         }
+        responseSize = strlen(response);
         break;
     case HTTP_FORBIDDEN:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
             printErrorHeader(response, resourceInfo.httpCode);
+        responseSize = strlen(response);
         break;
     case HTTP_UNAUTHORIZED:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
             printErrorHeader(response, resourceInfo.httpCode);
+        responseSize = strlen(response);
         break;
     default:
         printErrorHeader(response, resourceInfo.httpCode);
+        responseSize = strlen(response);
         break;
     }
+    return responseSize;
 }
 
-void printHeader(char *buffer, const char *resourcePath, http_request req)
+void printHeader(char *buffer, char *resourcePath, http_request req)
 {
     // Obter a data atual.
     time_t now;
@@ -267,6 +276,9 @@ void printHeader(char *buffer, const char *resourcePath, http_request req)
         }
         strftime(dateLastModified, sizeof(dateLastModified), "%a %b %d %H:%M:%S %Y BRT", localtime(&fileInfo.st_mtime));
 
+        char contentType[64];
+        setContentType(resourcePath, contentType);
+
         snprintf(buffer, MAX_BUFFER_SIZE,
                  "HTTP/1.1 200 OK\r\n"
                  "Date: %s\r\n"
@@ -274,9 +286,9 @@ void printHeader(char *buffer, const char *resourcePath, http_request req)
                  "Connection: %s\r\n"
                  "Last-Modified: %s\r\n"
                  "Content-Length: %ld\r\n"
-                 "Content-Type: text/html\r\n"
+                 "Content-Type: %s\r\n"
                  "\r\n",
-                 dateStr, "keep-alive", dateLastModified, (long)fileInfo.st_size);
+                 dateStr, "keep-alive", dateLastModified, (long)fileInfo.st_size, contentType);
     }
     else if (req == HTTP_OPTIONS)
     {
@@ -337,17 +349,17 @@ void printErrorHeader(char *buffer, http_code code)
     }
 }
 
-void printResource(char *response, char *resourcePath)
+int printResource(char *response, char *resourcePath)
 {
     struct stat fileInfo;
-    int fd;
+    FILE *file;
     int bytesRead;
 
     // Lê informações do arquivo
     TRY_ERR(stat(resourcePath, &fileInfo));
 
     // Abre o arquivo e lê o seu tamanho
-    TRY_ERR(fd = open(resourcePath, O_RDONLY));
+    TRY_NULL(file = fopen(resourcePath, "rb"));
 
     // Crie um buffer com um tamanho adequado para o arquivo
     char *buffer = (char *)malloc(2 * fileInfo.st_size); // Esta linha me custou horas...
@@ -361,20 +373,24 @@ void printResource(char *response, char *resourcePath)
     }
 
     // Leia o arquivo completo e armazene no buffer
-    TRY_ERR(bytesRead = read(fd, buffer, fileInfo.st_size));
+    TRY_ERR(bytesRead = fread(buffer, 1, fileInfo.st_size, file));
     if (bytesRead == 0)
     {
         printf("Arquivo com tamanho 0");
         exit(EXIT_FAILURE);
     }
-    buffer[bytesRead] = '\0';
-    close(fd);
+    fclose(file);
 
     // Concatena o header (response) com o conteúdo (buffer)
-    strcat(response, buffer);
+    // Move o ponteiro para o final do cabeçalho
+    char *dataStart = response + strlen(response);
+    // Está dando segmentation fault aqui
+    TRY_NULL(memcpy(dataStart, buffer, bytesRead));
 
     // Libere a memória alocada e feche o arquivo
     free(buffer);
+
+    return bytesRead;
 }
 
 int isValid(const char *filePath)
@@ -435,6 +451,39 @@ void checkSpecialResource(char *resourcePath, char *specialPath)
         if (!strcmp(specialResource, "forms.html"))
         {
             strncpy(specialPath, "web/forms.html", MAX_PATH_SIZE);
+        }
+    }
+}
+
+void setContentType(char *resourcePath, char *contentType)
+{
+    char *fileExtension = strrchr(resourcePath, '.');
+
+    if (fileExtension != NULL)
+    {
+        if (!strcmp(fileExtension, ".html"))
+        {
+            strcpy(contentType, "text/html");
+        }
+        else if (!strcmp(fileExtension, ".jpg") || !strcmp(fileExtension, ".jpeg"))
+        {
+            strcpy(contentType, "image/jpeg");
+        }
+        else if (!strcmp(fileExtension, ".png"))
+        {
+            strcpy(contentType, "image/png");
+        }
+        else if (!strcmp(fileExtension, ".pdf"))
+        {
+            strcpy(contentType, "application/pdf");
+        }
+        else if (!strcmp(fileExtension, ".gif"))
+        {
+            strcpy(contentType, "image/gif");
+        }
+        else
+        {
+            strcpy(contentType, "text/plain");
         }
     }
 }
