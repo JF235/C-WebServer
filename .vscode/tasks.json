@@ -3,17 +3,20 @@
         {
             "type": "cppbuild",
             "label": "C/C++: gcc build active file",
-            "command": "/usr/bin/gcc",
+            "command": "gcc",
             "args": [
-                "${fileDirname}/*.c",
+                "${workspaceFolder}/src/*.c",
                 "-fdiagnostics-color=always",
                 "-g",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
-                "-lfl"
+                "server",
+                "-lfl",
+                "-lpthread",
+                "-lcrypt",
+                "-Wall", 
+                "-Wextra" 
             ],
             "options": {
-                "cwd": "${fileDirname}"
             },
             "problemMatcher": [
                 "$gcc"

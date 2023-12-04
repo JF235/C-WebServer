@@ -34,13 +34,19 @@ bool authenticate(webResource resourceInfo, char *auth)
     bool authenticated = false;
     char decodedAuth[512];
 
+    // Verifica se a senha tem tamanho máximo de 8
+    char *senha = strchr(auth, ':') + 1;
+    if (strlen(senha) > 8){
+        return false;
+    }
+
     cryptPassword(auth, decodedAuth);
     if (!strcmp(decodedAuth, "NULL"))
     {
         // Faltou usuário e/ou senha
         return false;
     }
-
+    
     char *htpasswdFileName = findPasswdPath(resourceInfo.htaccessPath);
     if (htpasswdFileName == NULL)
     {

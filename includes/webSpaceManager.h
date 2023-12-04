@@ -37,8 +37,10 @@ Para imprimir em outro lugar, basta redirecionar a saída de `stdout` antes de f
 
 - Caso `resourceInfo.httpCode` represente um erro. Imprime somente o cabeçalho.
 - Caso `resourceInfo.httpCode` represente um OK. Imprime cabeçalho e conteúdo.
+
+Retorna o tamanho em bytes da resposta.
 */
-void httpRespond(char *response, webResource resourceInfo, http_request req);
+int httpRespond(char *response, webResource resourceInfo, http_request req);
 
 /*
 Função que faz a busca pelo recurso endereçado pelo espaço web `webPath` e caminho relativo `resource`.
@@ -50,7 +52,7 @@ webResource checkWebResource(const char *resource, bool authenticated);
 /* 
 Imprime o header de uma resposta associado ao código `code`, recurso `resourcePath` e requisição do tipo `req`.
 */
-void printHeader(char *response, const char *resourcePath, http_request req);
+void printHeader(char *response, char *resourcePath, http_request req);
 
 /* 
 Imprime o header de um erro associado ao código `code`.
@@ -59,8 +61,10 @@ void printErrorHeader(char *response, http_code code);
 
 /* 
 Faz a leitura do conteúdo presente no recurso indicado por `resourcePath` e envia para a saída padrão.
+
+Retorna o tamanho em bytes do recurso
 */
-void printResource(char *response, char *resourcePath);
+int printResource(char *response, char *resourcePath);
 
 /* 
 Verifica se o arquivo de caminho `filePath` não contém referências
@@ -92,5 +96,12 @@ Arquivs especiais:
 - forms.html
 */
 void checkSpecialResource(char *resourcePath, char *specialPath);
+
+/*
+Define o formato do arquivo enviado, baseando-se na extensão do arquivo.
+.html => text/html
+.jpeg || .jpg => image/jpeg
+*/
+void setContentType(char *resourcePath, char *contentType);
 
 #endif
