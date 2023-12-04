@@ -456,14 +456,14 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  10
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   14
+#define YYLAST   17
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  8
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  12
+#define YYNRULES  13
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  20
 
@@ -513,8 +513,8 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    20,    20,    21,    23,    24,    25,    26,    31,    32,
-      34,    35,    36
+       0,    20,    20,    21,    23,    24,    25,    26,    30,    32,
+      33,    35,    36,    37
 };
 #endif
 
@@ -537,12 +537,12 @@ static const yytype_int16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF (-6)
+#define YYPACT_NINF (-4)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-1)
+#define YYTABLE_NINF (-11)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -551,8 +551,8 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -3,     3,    -6,     4,     0,    -6,     1,    -6,     7,     6,
-      -6,    -3,     8,     3,     9,    -6,    -6,    -6,     7,    -6
+      -3,     6,     1,     7,     0,    -4,     5,    -4,     3,     8,
+      -4,    -3,     9,     6,    10,    -4,    -4,    -4,     3,    -4
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -560,14 +560,14 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       4,    10,     9,     0,     0,     3,     0,    12,     6,     0,
-       1,     4,     0,    10,     0,     7,     2,     8,     5,    11
+       4,    11,     8,     0,     0,     3,     0,    13,     6,     0,
+       1,     4,     0,    11,     0,     7,     2,     9,     5,    12
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -5,    -6,    -1
+      -4,    -4,    -1,    -4,     4
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -581,14 +581,14 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      10,     1,     2,     3,    12,    13,    16,    11,     7,     9,
-      14,    15,    18,    17,    19
+      10,     1,     2,     3,   -10,   -10,    14,    11,    12,    13,
+      16,     7,     9,    15,    17,    19,     0,    18
 };
 
 static const yytype_int8 yycheck[] =
 {
-       0,     4,     5,     6,     3,     4,    11,     7,     5,     5,
-       3,     5,    13,     5,     5
+       0,     4,     5,     6,     3,     4,     3,     7,     3,     4,
+      11,     5,     5,     5,     5,     5,    -1,    13
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -602,15 +602,15 @@ static const yytype_int8 yystos[] =
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
-       0,     8,     9,     9,    10,    10,    10,    10,    11,    11,
-      12,    12,    12
+       0,     8,     9,     9,    10,    10,    10,    10,    10,    11,
+      11,    12,    12,    12
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     3,     1,     0,     3,     2,     3,     3,     1,
-       0,     3,     1
+       0,     2,     3,     1,     0,     3,     2,     3,     1,     3,
+       1,     0,     3,     1
 };
 
 
@@ -1327,8 +1327,8 @@ yyreduce:
     break;
 
   case 8:
-#line 31 "parserBison.y"
-                                       {addCommand(globalCmdList, (yyvsp[0].str));free((yyvsp[0].str));}
+#line 30 "parserBison.y"
+                                        {addCommand(globalCmdList, (yyvsp[0].str));free((yyvsp[0].str));}
 #line 1333 "parserBison.tab.c"
     break;
 
@@ -1339,25 +1339,31 @@ yyreduce:
     break;
 
   case 10:
-#line 34 "parserBison.y"
-                                        {(yyval.optionList) = createOptionList();}
+#line 33 "parserBison.y"
+                                       {addCommand(globalCmdList, (yyvsp[0].str));free((yyvsp[0].str));}
 #line 1345 "parserBison.tab.c"
     break;
 
   case 11:
 #line 35 "parserBison.y"
-                                        {(yyval.optionList) = (yyvsp[-2].optionList); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
+                                        {(yyval.optionList) = createOptionList();}
 #line 1351 "parserBison.tab.c"
     break;
 
   case 12:
 #line 36 "parserBison.y"
-                                      {(yyval.optionList) = createOptionList(); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
+                                        {(yyval.optionList) = (yyvsp[-2].optionList); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
 #line 1357 "parserBison.tab.c"
     break;
 
+  case 13:
+#line 37 "parserBison.y"
+                                      {(yyval.optionList) = createOptionList(); addOption((yyval.optionList), (yyvsp[0].str)); free((yyvsp[0].str));}
+#line 1363 "parserBison.tab.c"
+    break;
 
-#line 1361 "parserBison.tab.c"
+
+#line 1367 "parserBison.tab.c"
 
       default: break;
     }
@@ -1589,7 +1595,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 40 "parserBison.y"
+#line 41 "parserBison.y"
 
 
 void yyerror(const char* s) {

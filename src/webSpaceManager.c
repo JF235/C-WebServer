@@ -2,7 +2,7 @@
 
 char webspacePath[512];
 
-webResource httpRequest(char *response, char *resource, char *reqText, char *auth)
+webResource httpRequest(char *response, char *resource, char *reqText, char *auth, char *newCredentials)
 {
     webResource resourceInfo;
 
@@ -20,7 +20,7 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
         if (resourceInfo.httpCode == HTTP_UNAUTHORIZED && auth != NULL)
         {
             bool authenticated;
-            authenticated = authenticate(resourceInfo, auth);
+            authenticated = authenticateB64(resourceInfo, auth);
             if (authenticated)
             {
                 resourceInfo = checkWebResource(resource, true);
@@ -29,7 +29,22 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
     }
     else if (req == HTTP_POST)
     {
-        resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
+        // Processar POST
+
+        // Encontrar htacces associado
+        snprintf(resourceInfo.resourcePath, sizeof(resourceInfo.resourcePath), "%s%s", webspacePath, resource);
+        char *htaccessPath = findHtaccess(resourceInfo.resourcePath);
+        if (htaccessPath != NULL)
+        {
+            strncpy(resourceInfo.htaccessPath, htaccessPath, MAX_PATH_SIZE);
+            free(htaccessPath);
+            // Atualiza resposta e arquivo de senhas
+            postHandler(&resourceInfo, newCredentials);
+        }
+        else
+        {
+            resourceInfo.httpCode = HTTP_BAD_REQUEST;
+        }
     }
 
     httpRespond(response, resourceInfo, req);
@@ -91,12 +106,15 @@ webResource checkWebResource(const char *resource, bool authenticated)
 
             // Verfica se é um arquivo especial (fora do webspace)
             checkSpecialResource(resourcePath, specialPath);
-            if (strlen(specialPath) != 0 && htaccesPath != NULL) {
+            if (strlen(specialPath) != 0 && htaccesPath != NULL)
+            {
                 // É um arquivo especial
                 resourceInfo.httpCode = HTTP_OK;
                 strncpy(resourceInfo.resourcePath, specialPath, MAX_PATH_SIZE);
                 return resourceInfo;
-            } else {
+            }
+            else
+            {
                 // Arquivo inexistente
                 resourceInfo.httpCode = HTTP_NOT_FOUND;
                 return resourceInfo;
@@ -196,7 +214,7 @@ void httpRespond(char *response, webResource resourceInfo, http_request req)
     case HTTP_OK:
         // Requisição atendida
         printHeader(response, resourceInfo.resourcePath, req);
-        if (req == HTTP_GET)
+        if (req == HTTP_GET || req == HTTP_POST)
         {
             printResource(response, resourceInfo.resourcePath);
         }
@@ -238,7 +256,7 @@ void printHeader(char *buffer, const char *resourcePath, http_request req)
     strftime(dateStr, sizeof(dateStr), "%a %b %d %H:%M:%S %Y BRT", localtime(&now));
 
     // Imprimir o cabeçalho certo para cada requisição
-    if (req == HTTP_GET || req == HTTP_HEAD)
+    if (req == HTTP_GET || req == HTTP_HEAD || req == HTTP_POST)
     {
         // Obter informações sobre o arquivo (tamanho e data de modificação).
         struct stat fileInfo;
@@ -388,18 +406,15 @@ char *findHtaccess(char *resourcePath)
     {
         char htaccessPath[MAX_PATH_SIZE + 16];
         snprintf(htaccessPath, sizeof(htaccessPath), "%s/.htaccess", currentPath);
-        // printf("%s ", htaccessPath);
 
         // Verifica se o arquivo .htaccess existe no diretório atual
         if (access(htaccessPath, F_OK) != -1)
         {
             char *resultPath = (char *)malloc(MAX_PATH_SIZE);
             strncpy(resultPath, htaccessPath, MAX_PATH_SIZE);
-            // printf("encontrado\n");
             return resultPath;
         }
 
-        // printf("não encontrado\n");
         //  Remove o último diretório do caminho
         char *lastSlash = strrchr(currentPath, '/');
         if (lastSlash != NULL)
@@ -411,12 +426,14 @@ char *findHtaccess(char *resourcePath)
     return NULL;
 }
 
-
-void checkSpecialResource(char *resourcePath, char *specialPath){
+void checkSpecialResource(char *resourcePath, char *specialPath)
+{
     char *lastSlash = strrchr(resourcePath, '/');
-    if (lastSlash != NULL){
+    if (lastSlash != NULL)
+    {
         char *specialResource = lastSlash + 1;
-        if (!strcmp(specialResource, "forms.html")){
+        if (!strcmp(specialResource, "forms.html"))
+        {
             strncpy(specialPath, "web/forms.html", MAX_PATH_SIZE);
         }
     }

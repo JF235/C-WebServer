@@ -10,6 +10,7 @@
 /*
 webResource:
 - `resourcePath` caminho do recurso resolvido.
+- `htacessPath` caminho do arquivo de proteção.
 - `httpCode` código de status HTTP da resposta.
 - `bytes` número de bytes enviados em resposta.
 */
@@ -22,11 +23,11 @@ typedef struct webResource
 } webResource;
 
 /*
-Processa uma requisição HTTP `reqText` (GET, HEAD, OPTIONS, TRACE)
+Processa uma requisição HTTP `reqText` (GET, HEAD, OPTIONS, TRACE, POST)
 Associada ao espaço web com caminho `webPath` e caminho de recurso `resource`.
-O resultado será encaminhado para stdout por padrão.
+O resultado será escrito em `response`.
 */
-webResource httpRequest(char *response, char *resource, char *reqText, char *auth);
+webResource httpRequest(char *response, char *resource, char *reqText, char *auth, char *newCredentials);
 
 /*
 Imprime a resposta HTTP associada ao recurso `resourceInfo` e requisição `req`.

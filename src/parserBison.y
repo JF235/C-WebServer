@@ -27,6 +27,7 @@ line: /* empty */
                                         addOption(&(globalCmdList->tail->optionList), $2); free($2);
                                         addOption(&(globalCmdList->tail->optionList), $3); free($3);
                                         }
+    | WORD                              {addCommand(globalCmdList, $1);free($1);}
     ;
 cmd_list:   cmd_list COMMA WORD        {addCommand(globalCmdList, $3);free($3);}
         |   WORD                       {addCommand(globalCmdList, $1);free($1);}

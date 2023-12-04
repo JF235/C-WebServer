@@ -3,7 +3,7 @@
 
 #include "essentials.h"
 
-#define MAX_BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 2*4096
 
 #define MAX_THREADS 2
 #define SERVER_READ_TIMEOUT_MS 7 * 1000 // [penultimo digito do RA] + 3
@@ -69,5 +69,10 @@ Envia uma resposta HTTP com uma página HTML mínima indicando que
 o servidor está sobrecarregado.
 */
 int send_response_overload(int sock);
+
+/*
+Lida com uma requisição post que deseja alterar as credenciais de um usuário.
+*/
+void postHandler(webResource *resourceInfo, char *newCredentials);
 
 #endif
