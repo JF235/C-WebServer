@@ -196,27 +196,55 @@ int send_response_overload(int sock)
     return (int)bytes_enviados;
 }
 
+int parseCredentials(char *credentials, char *delimiters, char *fieldValues[], size_t numFields) {
+    char *token, *saveptr;
+
+    for (size_t i = 0; i < 2*numFields; ++i) {
+        token = strtok_r((i == 0) ? (char *)credentials : NULL, delimiters, &saveptr);
+
+        if (token == NULL) {
+            // Faltaram campos
+            return -1;
+        }
+
+        if (i%2) // Só pega valores e não labels
+            snprintf(fieldValues[i/2], 50, "%s", token);
+    }
+
+    return 0;
+}
+
 void postHandler(webResource *resourceInfo, char *newCredentials)
 {
+    int result;
+
     // Separar as credenciais
     char username[50];
     char oldPass[50];
     char newPass[50];
     char cnewPass[50];
-    char dummy[64];
+    char confirmar[50];
+    char *fieldValues[] = {username, oldPass, newPass, cnewPass, confirmar};
+    size_t numFields = sizeof(fieldValues) / sizeof(fieldValues[0]);
+    char delimiters[] = "&=";
+    result = parseCredentials(newCredentials, delimiters, fieldValues, numFields);
 
-    // TODO: Nome genérico de formulário
-    TRY_ERR(sscanf(newCredentials, "%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49[^&]&%49[^=]=%49s",
-                   dummy, username, 
-                   dummy, oldPass, 
-                   dummy, newPass,
-                   dummy, cnewPass, 
-                   dummy, dummy));
+    if (result < 0){
+        resourceInfo->httpCode = HTTP_BAD_REQUEST;
+        return;
+    }
+
+    printf("Tentativa de atualização de dados\n");
+    printf("username: %s\n", username);
+    printf("oldPass: %s\n", oldPass);
+    printf("newPass: %s\n", newPass);
+    printf("cnewPass: %s\n", cnewPass);
 
     // verificar as credenciais
     if (strcmp(newPass, cnewPass))
     {
-        resourceInfo->httpCode = HTTP_UNAUTHORIZED;
+        resourceInfo->httpCode = HTTP_OK;
+        strcpy(resourceInfo->resourcePath, "web/invalidAuth.html");
         return;
     }
 
@@ -231,7 +259,7 @@ void postHandler(webResource *resourceInfo, char *newCredentials)
     snprintf(newAuth, 512, "%s:%s", username, newPass);
     cryptPassword(newAuth, newCryptedAuth);
 
-    int result = updatePassword(*resourceInfo, oldCryptedAuth, newCryptedAuth);
+    result = updatePassword(*resourceInfo, oldCryptedAuth, newCryptedAuth);
     if (result == 0)
     {
         // Mudança OK
