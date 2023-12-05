@@ -1,12 +1,13 @@
 #include "../includes/essentials.h"
 
-char webspacePath[MAX_PATH_SIZE];
+char webspacePath[PATH_SIZE_MEDIUM];
 
 webResource httpRequest(char *response, char *resource, char *reqText, char *auth, char *newCredentials)
 {
     webResource resourceInfo;
 
-    // Obtém o número da requisição
+    // Obtém o número da requisição e informações do recurso
+
     http_request req = httpReqText2Number(reqText);
 
     if (req == -1)
@@ -17,6 +18,9 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
     {
         // Verifica se o recurso existe e é acessível (Atividade 5)
         resourceInfo = checkWebResource(resource, false);
+
+        // Se não estiver autorizado, mas conter o campo de autenticação,
+        // tenta autenticar e fazer a busca novamente.
         if (resourceInfo.httpCode == HTTP_UNAUTHORIZED && auth != NULL)
         {
             bool authenticated;
@@ -36,7 +40,7 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
         char *htaccessPath = findHtaccess(resourceInfo.resourcePath);
         if (htaccessPath != NULL)
         {
-            strncpy(resourceInfo.htaccessPath, htaccessPath, MAX_PATH_SIZE);
+            strncpy(resourceInfo.htaccessPath, htaccessPath, PATH_SIZE_BIG);
             free(htaccessPath);
             // Atualiza resposta e arquivo de senhas
             postHandler(&resourceInfo, newCredentials);
@@ -49,20 +53,6 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
 
     resourceInfo.bytes = httpRespond(response, resourceInfo, req);
 
-#if LOG
-    FILE *logfile = freopen(logFileName, "a", stdout);
-    if (logfile == NULL)
-    {
-        perror("Erro ao abrir o arquivo de saída");
-        exit(EXIT_FAILURE);
-    }
-    printf("RESPOSTA:\n\n");
-    if (req == HTTP_GET)
-        req = HTTP_HEAD;
-    httpRespond(resourceInfo, req);
-
-    fclose(logfile);
-#endif
     return resourceInfo;
 }
 
@@ -71,7 +61,7 @@ webResource checkWebResource(const char *resource, bool authenticated)
     webResource resourceInfo;
 
     // 1. Combinar caminho da web e recurso
-    char resourcePath[MAX_PATH_SIZE];
+    char resourcePath[PATH_SIZE_BIG];
 
     // Full Resource Path
     snprintf(resourcePath, sizeof(resourcePath), "%s%s", webspacePath, resource);
@@ -84,13 +74,13 @@ webResource checkWebResource(const char *resource, bool authenticated)
         return resourceInfo;
     }
 
-    // 1.2 Verificar se tem um htacces
+    // 1.2 Verificar se tem um htaccess
     char *htaccesPath = findHtaccess(resourcePath);
     if (htaccesPath != NULL && !authenticated)
     {
-        // printf("htaccess encontrado: %s\n", htaccesPath);
+        // htaccess encontrado e busca não autenticada
         resourceInfo.httpCode = HTTP_UNAUTHORIZED;
-        strncpy(resourceInfo.htaccessPath, htaccesPath, MAX_PATH_SIZE + 16);
+        strncpy(resourceInfo.htaccessPath, htaccesPath, PATH_SIZE_BIG);
         free(htaccesPath);
         return resourceInfo;
     }
@@ -102,7 +92,7 @@ webResource checkWebResource(const char *resource, bool authenticated)
         if (errno == ENOENT)
         {
             // Arquivo não encontrado
-            char specialPath[MAX_PATH_SIZE] = {0};
+            char specialPath[PATH_SIZE_BIG] = {0};
 
             // Verfica se é um arquivo especial (fora do webspace)
             checkSpecialResource(resourcePath, specialPath);
@@ -110,7 +100,7 @@ webResource checkWebResource(const char *resource, bool authenticated)
             {
                 // É um arquivo especial
                 resourceInfo.httpCode = HTTP_OK;
-                strncpy(resourceInfo.resourcePath, specialPath, MAX_PATH_SIZE);
+                strncpy(resourceInfo.resourcePath, specialPath, PATH_SIZE_BIG);
                 return resourceInfo;
             }
             else
@@ -157,9 +147,9 @@ webResource checkWebResource(const char *resource, bool authenticated)
         }
 
         // 6. Verifique se existe index.html ou welcome.html
-        char indexPath[MAX_PATH_SIZE + 16];
+        char indexPath[PATH_SIZE_BIG + 16];
         snprintf(indexPath, sizeof(indexPath), "%s/index.html", resourcePath);
-        char welcomePath[MAX_PATH_SIZE + 16];
+        char welcomePath[PATH_SIZE_BIG + 16];
         snprintf(welcomePath, sizeof(welcomePath), "%s/welcome.html", resourcePath);
 
         if (access(indexPath, R_OK) == 0)
@@ -326,6 +316,8 @@ void printErrorHeader(char *buffer, http_code code)
 
     if (code == HTTP_UNAUTHORIZED)
     {
+        // Mensagem de erro UNAUTHORIZED deve conter o campo
+        // WWW-Authenticate
         snprintf(buffer, MAX_BUFFER_SIZE,
                  "HTTP/1.1 %s\r\n"
                  "Date: %s\r\n"
@@ -400,19 +392,19 @@ int isValid(const char *filePath)
     return 1;
 }
 
-void configWebspace()
+void configWebspace(char *webspaceName)
 {
-    char cwdPath[MAX_PATH_SIZE];
+    char cwdPath[PATH_SIZE_SMALL];
     // Current Workind Directory
     getcwd(cwdPath, sizeof(cwdPath));
     // Full Web Path
-    snprintf(webspacePath, sizeof(webspacePath), "%s%s", cwdPath, WEBSPACE_REL_PATH);
+    snprintf(webspacePath, sizeof(webspacePath), "%s/web/%s", cwdPath, webspaceName);
 }
 
 char *findHtaccess(char *resourcePath)
 {
     // Cria uma cópia do caminho do recurso
-    char currentPath[MAX_PATH_SIZE];
+    char currentPath[PATH_SIZE_BIG];
     strncpy(currentPath, resourcePath, sizeof(currentPath));
 
     // printf("Searching...\n");
@@ -420,14 +412,14 @@ char *findHtaccess(char *resourcePath)
     // Enquanto estiver dentro do webspace...
     while (strlen(currentPath) >= strlen(webspacePath))
     {
-        char htaccessPath[MAX_PATH_SIZE + 16];
+        char htaccessPath[PATH_SIZE_BIG + 16];
         snprintf(htaccessPath, sizeof(htaccessPath), "%s/.htaccess", currentPath);
 
         // Verifica se o arquivo .htaccess existe no diretório atual
         if (access(htaccessPath, F_OK) != -1)
         {
-            char *resultPath = (char *)malloc(MAX_PATH_SIZE);
-            strncpy(resultPath, htaccessPath, MAX_PATH_SIZE);
+            char *resultPath = (char *)malloc(PATH_SIZE_BIG + 16);
+            strncpy(resultPath, htaccessPath, PATH_SIZE_BIG + 16);
             return resultPath;
         }
 
@@ -450,7 +442,7 @@ void checkSpecialResource(char *resourcePath, char *specialPath)
         char *specialResource = lastSlash + 1;
         if (!strcmp(specialResource, "forms.html"))
         {
-            strncpy(specialPath, "web/forms.html", MAX_PATH_SIZE);
+            strncpy(specialPath, "web/forms.html", PATH_SIZE_BIG);
         }
     }
 }

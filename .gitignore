@@ -3,5 +3,6 @@
 ./main
 test*
 meu-webspace
+webspace_para_testes
 server
 client

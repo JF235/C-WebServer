@@ -8,7 +8,7 @@ pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Global somente de leitura webspacePath
-extern char webspacePath[MAX_PATH_SIZE];
+extern char webspacePath[PATH_SIZE_MEDIUM];
 
 void *threadFunction(void *arg)
 {
@@ -40,9 +40,9 @@ void *threadFunction(void *arg)
 int main(int argc, char **argv)
 {
     // Verifica os argumentos
-    if (argc != 2)
+    if (argc != 3)
     {
-        fprintf(stderr, "Use: %s <portNum>\n", argv[0]);
+        fprintf(stderr, "Use: %s <portNum> <webspace>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     socklen_t clientSize = sizeof(cliente);
 
     // Configurando a variável global `webspacePath`
-    configWebspace();
+    configWebspace(argv[2]);
 
     // Seta o valor da porta (primeiro argumento)
     unsigned short port = (unsigned short)atoi(argv[1]);
@@ -88,6 +88,7 @@ int main(int argc, char **argv)
         else{
             pthread_mutex_unlock(&count_mutex);
 
+            // Retorna o número de bytes enviados, se for útil...
             send_response_overload(newSock);
             SERVER_OVERLOAD_TRACE;
 

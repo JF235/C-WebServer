@@ -3,7 +3,9 @@
 
 #include "essentials.h"
 
-#define MAX_PATH_SIZE 1024
+#define PATH_SIZE_SMALL 512 // Tamanho do caminho de um recurso
+#define PATH_SIZE_MEDIUM 1024 // Tamanho do caminho do webspace
+#define PATH_SIZE_BIG 2048 // Tamanho de um caminho webspace + recurso
 
 #define WEBSPACE_REL_PATH "/web/meu-webspace"
 
@@ -16,8 +18,8 @@ webResource:
 */
 typedef struct webResource
 {
-    char resourcePath[MAX_PATH_SIZE + 16];
-    char htaccessPath[MAX_PATH_SIZE + 16];
+    char resourcePath[PATH_SIZE_BIG];
+    char htaccessPath[PATH_SIZE_BIG];
     http_request httpCode;
     ssize_t bytes;
 } webResource;
@@ -26,7 +28,7 @@ typedef struct webResource
 Seta a variável global `webspacePath` que contém o caminho absoluto 
 do webspace.
 */
-void configWebspace();
+void configWebspace(char *webspaceName);
 
 /*
 Processa uma requisição HTTP `reqText` (GET, HEAD, OPTIONS, TRACE, POST)
@@ -66,7 +68,7 @@ Imprime o header de um erro associado ao código `code`.
 void printErrorHeader(char *response, http_code code);
 
 /* 
-Faz a leitura do conteúdo presente no recurso indicado por `resourcePath` e envia para a saída padrão.
+Faz a leitura do conteúdo presente no recurso indicado pelo caminho `resourcePath` e escreve no buffer response.
 
 Retorna o tamanho em bytes do recurso
 */
@@ -92,8 +94,10 @@ char *findHtaccess(char *resourcePath);
 Verifica se o caminho atual faz menção a um recurso especial
 que está fora do webspace.
 
-Arquivs especiais:
+Arquivos especiais:
 - forms.html
+
+Escreve o caminho do recurso especial no buffer `specialPath`
 */
 void checkSpecialResource(char *resourcePath, char *specialPath);
 

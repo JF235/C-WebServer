@@ -8,7 +8,7 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern int requests;
 CommandList *globalCmdList;
 // Global que indica o caminho absoluto do Path
-extern char webspacePath[MAX_PATH_SIZE];
+extern char webspacePath[PATH_SIZE_MEDIUM];
 
 extern int workingThreads;
 extern pthread_mutex_t count_mutex;
@@ -34,7 +34,7 @@ int createAndBind(unsigned short port)
 
 int processConnection(int newSock, bool *keepalive)
 {
-    char request[MAX_BUFFER_SIZE]; // Conteúdo da requisição
+    char request[BUFFER_SIZE_BIG]; // Conteúdo da requisição
 
     // status pode ser o número de bytes lidos do socket
     int status = (int)readRequest(newSock, request);
@@ -67,9 +67,14 @@ int processConnection(int newSock, bool *keepalive)
             *keepalive = false;
     }
 
-    // Vai gerar a resposta (grande complexidade dentro dessa
-    // função)
+    // Vai gerar a resposta 
+    // (grande complexidade dentro dessa função)
     webResource req = respondRequest(newSock, cmdList);
+
+    // Fecha a conexão imediatamente, para a requisição não fica pendurada
+    if (req.httpCode == HTTP_UNAUTHORIZED || req.httpCode == HTTP_NOT_FOUND){
+        *keepalive = false;
+    }
 
     freeCommandList(cmdList);
 
@@ -97,6 +102,7 @@ ssize_t readRequest(int newSock, char *request)
     if (numFds == 0)
     {
         // Tempo expirou, TIMEOUT
+        CHLD_TIMEDOUT_TRACE;
         return 0;
     }
 
@@ -134,13 +140,13 @@ CommandList *parseRequest(char *request)
 
 webResource respondRequest(int newSock, CommandList *cmdList)
 {
-    char *response = (char*)malloc(8*1024*1024);
+    char *response = (char*)malloc(8*1024*1024); // 8MB
     ssize_t bytes_enviados;
 
     char *requestMethod = cmdList->head->commandName;
     char *resourcePath = cmdList->head->optionList.head->optionName;
 
-    // check for authorization
+    // Verifica se o campo Authorization com usuario e senha estão presentes
     Command *cmd = findCommand("Authorization", cmdList);
     char *auth;
 
@@ -154,10 +160,10 @@ webResource respondRequest(int newSock, CommandList *cmdList)
         auth = auth + 6; // Remove prefix
     }
 
+    // Ponteiro para último comando (possivelmente o conteúdo de um POST)
     char *newCredentials = cmdList->tail->commandName;
 
-    // Processa a requisição e gera uma resposta armazenada no buffer
-    // response
+    // Processa a requisição e gera uma resposta armazenada no buffer response
     webResource req = httpRequest(response, resourcePath, requestMethod, auth, newCredentials);
 
     // Envia a response para o cliente
@@ -175,13 +181,13 @@ webResource respondRequest(int newSock, CommandList *cmdList)
 int send_response_overload(int sock)
 {
     ssize_t bytes_enviados;
-    char htmlContent[MAX_BUFFER_SIZE] = {0};
+    char htmlContent[BUFFER_SIZE_BIG] = {0};
 
     // Cabeçalho
     printErrorHeader(htmlContent, HTTP_SERVICE_UNAVAILABLE);
 
     // Corpo
-    char resourcePath[MAX_PATH_SIZE];
+    char resourcePath[PATH_SIZE_BIG];
     snprintf(resourcePath, sizeof(resourcePath), "%s%s", webspacePath, "/../overload.html");
     printResource(htmlContent, resourcePath);
 
