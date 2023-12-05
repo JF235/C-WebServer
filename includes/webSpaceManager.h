@@ -23,6 +23,12 @@ typedef struct webResource
 } webResource;
 
 /*
+Seta a variável global `webspacePath` que contém o caminho absoluto 
+do webspace.
+*/
+void configWebspace();
+
+/*
 Processa uma requisição HTTP `reqText` (GET, HEAD, OPTIONS, TRACE, POST)
 Associada ao espaço web com caminho `webPath` e caminho de recurso `resource`.
 O resultado será escrito em `response`.
@@ -71,12 +77,6 @@ Verifica se o arquivo de caminho `filePath` não contém referências
 relativas de diretório com `.` ou `..`
 */
 int isValid(const char *filePath);
-
-/*
-Seta a variável global `webspacePath` que contém o caminho absoluto 
-do webspace.
-*/
-void config_webspace();
 
 /*
 Busca o arquivo htaccess e retorna o seu caminho caso
