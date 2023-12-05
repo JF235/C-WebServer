@@ -7,7 +7,6 @@
 #define BUFFER_SIZE_BIG 102400 // Tamanho de um arquivo HTML
 //#define BUFFER_SIZE_HUGE 
 
-#define MAX_THREADS 2
 #define SERVER_READ_TIMEOUT_MS 7 * 1000 // [penultimo digito do RA] + 3
 
 /*

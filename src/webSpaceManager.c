@@ -492,6 +492,14 @@ void setContentType(char *resourcePath, char *contentType)
         {
             strcpy(contentType, "image/gif");
         }
+        else if (!strcmp(fileExtension, ".tif"))
+        {
+            strcpy(contentType, "image/tif");
+        }
+        else if (!strcmp(fileExtension, ".zip"))
+        {
+            strcpy(contentType, "application/zip");
+        }
         else
         {
             strcpy(contentType, "text/plain; charset=utf-8");
