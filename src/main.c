@@ -2,6 +2,7 @@
 
 // Contador de Threads
 int workingThreads = 0;
+int maxThreads = 1;
 pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Mutex para o parser que faz uso de variáveis globais
@@ -51,9 +52,9 @@ void *threadFunction(void *arg)
 int main(int argc, char **argv)
 {
     // Verifica os argumentos
-    if (argc != 4)
+    if (argc != 5)
     {
-        fprintf(stderr, "Use: %s <portNum> <webspace> <logfile>\n", argv[0]);
+        fprintf(stderr, "Use: %s <portNum> <webspace> <logfile> <threads>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -68,6 +69,9 @@ int main(int argc, char **argv)
     #ifdef LOG
     configLogFile(argv[3]);
     #endif
+
+
+    maxThreads = atoi(argv[4]);
 
     // Seta o valor da porta (primeiro argumento)
     unsigned short port = (unsigned short)atoi(argv[1]);
@@ -93,7 +97,7 @@ int main(int argc, char **argv)
 
         // Lock para fazer a leitura do contador de threads
         pthread_mutex_lock(&count_mutex);
-        if (workingThreads < MAX_THREADS){
+        if (workingThreads < maxThreads){
             workingThreads++;
             pthread_mutex_unlock(&count_mutex);
 

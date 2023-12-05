@@ -119,9 +119,9 @@ int checkFD(int fd)
 int main(int argc, char **argv)
 {
     int serverSock;
-    char request[MAX_BUFFER_SIZE] = {0};
-    char reqFilePath[MAX_PATH_SIZE];
-    char buffer[MAX_PATH_SIZE];
+    char request[2048] = {0};
+    char reqFilePath[512];
+    char buffer[512];
 
     // Uso indevido com comando
     if (argc != 3)

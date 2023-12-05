@@ -56,7 +56,7 @@
 
 #ifdef ENABLE_PARENT_TRACE
     #define SERVER_START_TRACE printf("\nWebspace configurado: %s\n%s já está aceitando conexões de clientes HTTP na porta %d.\n\n", webspacePath, argv[0], port)
-    #define SERVER_ACCEPTING_TRACE printf("[%ld] Aguardando conexões... %d filho(s) livre(s)\n", pthread_self(), MAX_THREADS - workingThreads)
+    #define SERVER_ACCEPTING_TRACE printf("[%ld] Aguardando conexões... %d filho(s) livre(s)\n", pthread_self(), maxThreads - workingThreads)
     #define SERVER_FULL_TRACE printf("[%ld] Aguardando conexões... (todos filhos ocupados)\n", pthread_self())
     #define SERVER_OVERLOAD_TRACE printf("[%ld] Mensagem de overload enviada\n", pthread_self())
 #else
