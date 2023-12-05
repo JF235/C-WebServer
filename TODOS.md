@@ -1,5 +1,4 @@
 TODOS:
-- Normalizar tamanho de buffers
 - Garantir que não está ocorrendo vazamento de memória
 - Verifica conteúdo de POST e HEAD
 - Adicionar LOG
@@ -8,4 +7,5 @@ TODOS:
 - Atualizar documentação
 
 Terminados:
+- Normalizar tamanho de buffers
 - Arquivos binários

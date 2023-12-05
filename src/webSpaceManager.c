@@ -110,6 +110,11 @@ webResource checkWebResource(const char *resource, bool authenticated)
                 return resourceInfo;
             }
         }
+        else if (errno == EACCES)
+        {
+            resourceInfo.httpCode = HTTP_FORBIDDEN;
+            return resourceInfo;
+        }
         else
         {
             // Erro na obtenção de stat
@@ -121,6 +126,8 @@ webResource checkWebResource(const char *resource, bool authenticated)
     // 3. Verifique se o recurso possui permissão de leitura
     if (!(fileStat.st_mode & S_IRUSR))
     {
+        printf("OK\n");
+        fflush(NULL);
         // Arquivo não possui permissão de leitura
         resourceInfo.httpCode = HTTP_FORBIDDEN;
         return resourceInfo;
@@ -227,7 +234,10 @@ int httpRespond(char *response, webResource resourceInfo, http_request req)
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
+        {
             printErrorHeader(response, resourceInfo.httpCode, "web/forbidden.html");
+            printResource(response, "web/forbidden.html");
+        }
         responseSize = strlen(response);
         break;
     case HTTP_UNAUTHORIZED:
@@ -312,7 +322,8 @@ void printErrorHeader(char *buffer, http_code code, char *errorHtmlFile)
     struct stat fileInfo;
     if (stat(errorHtmlFile, &fileInfo) == -1)
     {
-        perror("Erro ao obter informações do arquivo");
+        printf("%d\n", code);
+        perror("Erro1 ao obter informações do arquivo");
         exit(EXIT_FAILURE);
     }
 

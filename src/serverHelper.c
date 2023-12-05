@@ -72,7 +72,7 @@ int processConnection(int newSock, bool *keepalive)
     webResource req = respondRequest(newSock, cmdList);
 
     // Fecha a conexão imediatamente, para a requisição não fica pendurada
-    if (req.httpCode == HTTP_UNAUTHORIZED || req.httpCode == HTTP_NOT_FOUND){
+    if (req.httpCode > 399){
         *keepalive = false;
     }
 
