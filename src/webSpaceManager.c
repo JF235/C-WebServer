@@ -126,8 +126,6 @@ webResource checkWebResource(const char *resource, bool authenticated)
     // 3. Verifique se o recurso possui permissão de leitura
     if (!(fileStat.st_mode & S_IRUSR))
     {
-        printf("OK\n");
-        fflush(NULL);
         // Arquivo não possui permissão de leitura
         resourceInfo.httpCode = HTTP_FORBIDDEN;
         return resourceInfo;
@@ -389,7 +387,7 @@ int printResource(char *response, char *resourcePath)
     TRY_ERR(bytesRead = fread(buffer, 1, fileInfo.st_size, file));
     if (bytesRead == 0)
     {
-        printf("Arquivo com tamanho 0");
+        printf("%s\nArquivo com tamanho 0\n", resourcePath);
         exit(EXIT_FAILURE);
     }
     fclose(file);
