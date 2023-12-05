@@ -1,6 +1,6 @@
 #include "../includes/essentials.h"
 
-char webspacePath[512];
+char webspacePath[MAX_PATH_SIZE];
 
 webResource httpRequest(char *response, char *resource, char *reqText, char *auth, char *newCredentials)
 {
@@ -400,9 +400,9 @@ int isValid(const char *filePath)
     return 1;
 }
 
-void config_webspace()
+void configWebspace()
 {
-    char cwdPath[256];
+    char cwdPath[MAX_PATH_SIZE];
     // Current Workind Directory
     getcwd(cwdPath, sizeof(cwdPath));
     // Full Web Path

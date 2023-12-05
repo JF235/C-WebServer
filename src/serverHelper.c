@@ -7,54 +7,12 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 extern int requests;
 CommandList *globalCmdList;
-extern char webspacePath[256];
+// Global que indica o caminho absoluto do Path
+extern char webspacePath[MAX_PATH_SIZE];
 
 extern int workingThreads;
 extern pthread_mutex_t count_mutex;
 extern pthread_mutex_t parser_mutex;
-
-int processConnection(int newSock, bool *keepalive)
-{
-    char request[MAX_BUFFER_SIZE];
-
-    int status = (int)readRequest(newSock, request);
-    if (status == 0) // Encerrou a conexao com EOF
-    {
-        *keepalive = false;
-        return status;
-    }
-
-    pthread_mutex_lock(&parser_mutex);
-    CommandList *cmdList = parseRequest(request);
-    pthread_mutex_unlock(&parser_mutex);
-
-    Command *cmd = findCommand("Connection", cmdList);
-    if (cmd == NULL)
-    {
-        *keepalive = false;
-    }
-    else
-    {
-        char *optionName = cmd->optionList.head->optionName;
-        if (!strcmp(optionName, "keep-alive"))
-            *keepalive = true;
-        else
-            *keepalive = false;
-    }
-
-    webResource req = respondRequest(newSock, cmdList);
-
-    if (req.httpCode == HTTP_UNAUTHORIZED)
-    {
-        *keepalive = false;
-    }
-
-    freeCommandList(cmdList);
-
-    CHLD_RESP_TRACE;
-
-    return status;
-}
 
 int createAndBind(unsigned short port)
 {
@@ -74,11 +32,58 @@ int createAndBind(unsigned short port)
     return sock;
 }
 
+int processConnection(int newSock, bool *keepalive)
+{
+    char request[MAX_BUFFER_SIZE]; // Conteúdo da requisição
+
+    // status pode ser o número de bytes lidos do socket
+    int status = (int)readRequest(newSock, request);
+    if (status == 0) // Encerrou a conexao com EOF ou deu TIMEOUT
+    {
+        *keepalive = false;
+        return status;
+    }
+
+    // Realiza o parsing, variáveis globais envolvidas...
+    pthread_mutex_lock(&parser_mutex);
+    CommandList *cmdList = parseRequest(request);
+    pthread_mutex_unlock(&parser_mutex);
+
+    // Busca o comando Connection para atualizar o estado de
+    // keepalive
+    Command *cmd = findCommand("Connection", cmdList);
+    if (cmd == NULL)
+    {
+        // Se o comando não estiver presente, false
+        *keepalive = false;
+    }
+    else
+    {
+        // Se estiver presente, olha para o nome da opção
+        char *optionName = cmd->optionList.head->optionName;
+        if (!strcmp(optionName, "keep-alive"))
+            *keepalive = true;
+        else
+            *keepalive = false;
+    }
+
+    // Vai gerar a resposta (grande complexidade dentro dessa
+    // função)
+    webResource req = respondRequest(newSock, cmdList);
+
+    freeCommandList(cmdList);
+
+    CHLD_RESP_TRACE;
+
+    return status;
+}
+
 ssize_t readRequest(int newSock, char *request)
 {
     int numFds;
     ssize_t bytes_received;
 
+    // Configurando o Poll
     struct pollfd fds[10];
     memset(fds, 0, sizeof(fds));
     fds[0].fd = newSock;
@@ -91,36 +96,25 @@ ssize_t readRequest(int newSock, char *request)
 
     if (numFds == 0)
     {
-        close(newSock);
-        CHLD_TIMEDOUT_TRACE;
-
-        pthread_mutex_lock(&count_mutex);
-        workingThreads--;
-        pthread_mutex_unlock(&count_mutex);
-
-        CHLD_EXITED_TRACE;
-
-        pthread_exit(NULL);
+        // Tempo expirou, TIMEOUT
+        return 0;
     }
 
+    // Lê a requisição no socket e salva no buffer `request`
     TRY_ERR(bytes_received = read(newSock, request, MAX_BUFFER_SIZE));
 
     CHLD_READ_TRACE;
 
     if (bytes_received == 0)
     {
+        // Leu um EOF
         return 0;
     }
+    // Adiciona um caracterece de fim de string no final da leitura.
     request[bytes_received] = '\0';
 
+    // Imprime toda a requisição
     CHLDV_REQ_TRACE;
-
-    // Se a requisicao for um arquivo com a linha "bye" e uma quebra com \r\n, entao encerra o servidor.
-    if (!strcmp("bye\r\n", request))
-    {
-        printf("Fim do servidor.\n");
-        exit(EXIT_SUCCESS);
-    }
 
     return bytes_received;
 }

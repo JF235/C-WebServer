@@ -12,7 +12,7 @@
 // - Quando um envio foi bem sucedido
 #define ENABLE_CHLD_TRACE
 
-// Exibe o comportamento do processo pai
+// Trace da thread pai
 #define ENABLE_PARENT_TRACE
 
 // Exibe o conteúdo das respostas e requisições
@@ -55,7 +55,7 @@
 #endif
 
 #ifdef ENABLE_PARENT_TRACE
-    #define SERVER_START_TRACE printf("\n%s já está aceitando conexões de clientes HTTP em %d.\n\n", argv[0], port)
+    #define SERVER_START_TRACE printf("\nWebspace configurado: %s\n%s já está aceitando conexões de clientes HTTP na porta %d.\n\n", webspacePath, argv[0], port)
     #define SERVER_ACCEPTING_TRACE printf("[%ld] Aguardando conexões... %d filho(s) livre(s)\n", pthread_self(), MAX_THREADS - workingThreads)
     #define SERVER_FULL_TRACE printf("[%ld] Aguardando conexões... (todos filhos ocupados)\n", pthread_self())
     #define SERVER_OVERLOAD_TRACE printf("[%ld] Mensagem de overload enviada\n", pthread_self())
