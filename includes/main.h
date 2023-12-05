@@ -4,8 +4,7 @@
 #include "essentials.h"
 
 #define DEBUG 0
-#define LOG 0
-
+//#define LOG
 #define loop while (1)
 
 extern FILE *yyin;

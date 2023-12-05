@@ -7,6 +7,16 @@ pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Mutex para o parser que faz uso de variáveis globais
 pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+#ifdef LOG
+// Mutex para E/S em arquivo de log
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+// Mutex para E/S em arquivo de senhas
+pthread_mutex_t password_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+FILE *logfile;
+
 // Global somente de leitura webspacePath
 extern char webspacePath[PATH_SIZE_MEDIUM];
 
@@ -23,6 +33,10 @@ void *threadFunction(void *arg)
     while (keepalive){
         // A função `processConnection()` pode alterar o estado
         // de keepalive
+        #ifdef LOG
+        printlog("Thread processa conexão.\n");
+        #endif
+
         processConnection(newSock, &keepalive);
     }
 
@@ -40,9 +54,9 @@ void *threadFunction(void *arg)
 int main(int argc, char **argv)
 {
     // Verifica os argumentos
-    if (argc != 3)
+    if (argc != 4)
     {
-        fprintf(stderr, "Use: %s <portNum> <webspace>\n", argv[0]);
+        fprintf(stderr, "Use: %s <portNum> <webspace> <logfile>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -54,6 +68,10 @@ int main(int argc, char **argv)
     // Configurando a variável global `webspacePath`
     configWebspace(argv[2]);
 
+    #ifdef LOG
+    configLogFile(argv[3]);
+    #endif
+
     // Seta o valor da porta (primeiro argumento)
     unsigned short port = (unsigned short)atoi(argv[1]);
     // Cria e dá bind no soquete, retorna socket descriptor
@@ -63,6 +81,12 @@ int main(int argc, char **argv)
     TRY_ERR(listen(serverSock, 0));
 
     // Sinalização de funcionamento
+    #ifdef LOG
+    char log[256];
+    sprintf(log, "Servidor começou na porta %d\n", (int)port);
+    printlog(log);
+    #endif
+    
     SERVER_START_TRACE;
 
     SERVER_ACCEPTING_TRACE;
@@ -76,6 +100,10 @@ int main(int argc, char **argv)
             workingThreads++;
             pthread_mutex_unlock(&count_mutex);
 
+            #ifdef LOG
+            printlog("Conexão aceita.\n");
+            #endif
+
             // Cria uma thread para processar a nova conexão
             pthread_t thread;
             int *arg = malloc(sizeof(int));
@@ -88,6 +116,9 @@ int main(int argc, char **argv)
         else{
             pthread_mutex_unlock(&count_mutex);
 
+            #ifdef LOG
+            printlog("Sevidor cheio.\n");
+            #endif
             // Retorna o número de bytes enviados, se for útil...
             send_response_overload(newSock);
             SERVER_OVERLOAD_TRACE;

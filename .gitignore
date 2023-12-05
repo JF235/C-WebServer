@@ -2,5 +2,7 @@
 ./client/
 ./main
 ./test*
+teste
+teste.c
 server
 client
