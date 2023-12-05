@@ -1,8 +1,6 @@
 ./server
 ./client/
 ./main
-test*
-meu-webspace
-webspace_para_testes
+./test*
 server
 client
