@@ -474,7 +474,7 @@ void setContentType(char *resourcePath, char *contentType)
     {
         if (!strcmp(fileExtension, ".html"))
         {
-            strcpy(contentType, "text/html");
+            strcpy(contentType, "text/html; charset=utf-8");
         }
         else if (!strcmp(fileExtension, ".jpg") || !strcmp(fileExtension, ".jpeg"))
         {
@@ -494,7 +494,7 @@ void setContentType(char *resourcePath, char *contentType)
         }
         else
         {
-            strcpy(contentType, "text/plain");
+            strcpy(contentType, "text/plain; charset=utf-8");
         }
     }
 }
