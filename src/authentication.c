@@ -1,5 +1,8 @@
 #include "../includes/essentials.h"
 
+// Mutex para E/S em arquivo de senhas
+pthread_mutex_t password_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 char *findPasswdPath(char *htaccessPath)
 {
     // Obtém o caminho do passwd
@@ -145,6 +148,7 @@ int updatePassword(webResource resourceInfo, char *oldAuth, char *newAuth)
         return -3;
     }
 
+    pthread_mutex_lock(&password_mutex);
     // Abre o arquivo .htpasswd para leitura
     FILE *htpasswdFile = fopen(htpasswdFileName, "r");
     if (htpasswdFile == NULL)
@@ -187,6 +191,7 @@ int updatePassword(webResource resourceInfo, char *oldAuth, char *newAuth)
         }
     }
 
+
     // Remove o arquivo original
     if (remove(htpasswdFileName) < 0 || rename(tempFileName, htpasswdFileName) < 0)
     {
@@ -197,6 +202,7 @@ int updatePassword(webResource resourceInfo, char *oldAuth, char *newAuth)
     free(htpasswdFileName);
     fclose(htpasswdFile);
     fclose(tempFile);
+    pthread_mutex_unlock(&password_mutex);
 
     return result;
 }

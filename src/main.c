@@ -12,9 +12,6 @@ pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-// Mutex para E/S em arquivo de senhas
-pthread_mutex_t password_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 FILE *logfile;
 
 // Global somente de leitura webspacePath
