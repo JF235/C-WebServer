@@ -6,6 +6,7 @@
         "client.h": "c",
         "time.h": "c",
         "poll.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "limits": "c"
     }
 }
