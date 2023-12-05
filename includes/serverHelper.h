@@ -71,4 +71,11 @@ Lida com uma requisição post que deseja alterar as credenciais de um usuário.
 */
 void postHandler(webResource *resourceInfo, char *newCredentials);
 
+
+#ifdef LOG
+void configLogFile(char *logfileName);
+
+void printlog(const char *log);
+#endif
+
 #endif

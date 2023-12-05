@@ -14,6 +14,12 @@ extern int workingThreads;
 extern pthread_mutex_t count_mutex;
 extern pthread_mutex_t parser_mutex;
 
+#ifdef LOG
+extern pthread_mutex_t log_mutex;
+#endif
+
+extern FILE *logfile;
+
 int createAndBind(unsigned short port)
 {
     struct sockaddr_in server_addr;
@@ -67,12 +73,13 @@ int processConnection(int newSock, bool *keepalive)
             *keepalive = false;
     }
 
-    // Vai gerar a resposta 
+    // Vai gerar a resposta
     // (grande complexidade dentro dessa função)
     webResource req = respondRequest(newSock, cmdList);
 
     // Fecha a conexão imediatamente, para a requisição não fica pendurada
-    if (req.httpCode > 399){
+    if (req.httpCode > 399)
+    {
         *keepalive = false;
     }
 
@@ -103,6 +110,11 @@ ssize_t readRequest(int newSock, char *request)
     {
         // Tempo expirou, TIMEOUT
         CHLD_TIMEDOUT_TRACE;
+
+        #ifdef LOG
+        printlog("Tempo da requisição expirou\n");
+        #endif
+
         return 0;
     }
 
@@ -133,6 +145,10 @@ CommandList *parseRequest(char *request)
 
     PARSER_TRACE;
 
+    #ifdef LOG
+    printlog("Parser concluído\n");
+    #endif
+
     // yylex_destroy();
     yy_delete_buffer(buff);
     return globalCmdList;
@@ -140,11 +156,17 @@ CommandList *parseRequest(char *request)
 
 webResource respondRequest(int newSock, CommandList *cmdList)
 {
-    char *response = (char*)malloc(8*1024*1024); // 8MB
+    char *response = (char *)malloc(8 * 1024 * 1024); // 8MB
     ssize_t bytes_enviados;
 
     char *requestMethod = cmdList->head->commandName;
     char *resourcePath = cmdList->head->optionList.head->optionName;
+    
+    #ifdef LOG
+    char log[256];
+    sprintf(log, "Método da requisição: %s\nRecurso: %s\n", requestMethod, resourcePath);
+    printlog(log);
+    #endif
 
     // Verifica se o campo Authorization com usuario e senha estão presentes
     Command *cmd = findCommand("Authorization", cmdList);
@@ -166,11 +188,17 @@ webResource respondRequest(int newSock, CommandList *cmdList)
     // Processa a requisição e gera uma resposta armazenada no buffer response
     webResource req = httpRequest(response, resourcePath, requestMethod, auth, newCredentials);
 
+    #ifdef LOG
+    sprintf(log, "Código da resposta: %d\nTamanho total da resposta: %ld\n", req.httpCode, req.bytes);
+    printlog(log);
+    #endif
+
     // Envia a response para o cliente
     // Envia o byte com a terminação '\0'
     TRY_ERR(bytes_enviados = write(newSock, response, req.bytes));
-    if (bytes_enviados != req.bytes){
-        fprintf(stderr,"Erro na escrita ao socket. Bytes faltando.\n");
+    if (bytes_enviados != req.bytes)
+    {
+        fprintf(stderr, "Erro na escrita ao socket. Bytes faltando.\n");
     }
 
     CHLDV_RESP_TRACE;
@@ -197,19 +225,22 @@ int send_response_overload(int sock)
     return (int)bytes_enviados;
 }
 
-int parseCredentials(char *credentials, char *delimiters, char *fieldValues[], size_t numFields) {
+int parseCredentials(char *credentials, char *delimiters, char *fieldValues[], size_t numFields)
+{
     char *token, *saveptr;
 
-    for (size_t i = 0; i < 2*numFields; ++i) {
+    for (size_t i = 0; i < 2 * numFields; ++i)
+    {
         token = strtok_r((i == 0) ? (char *)credentials : NULL, delimiters, &saveptr);
 
-        if (token == NULL) {
+        if (token == NULL)
+        {
             // Faltaram campos
             return -1;
         }
 
-        if (i%2) // Só pega valores e não labels
-            snprintf(fieldValues[i/2], 50, "%s", token);
+        if (i % 2) // Só pega valores e não labels
+            snprintf(fieldValues[i / 2], 50, "%s", token);
     }
 
     return 0;
@@ -230,7 +261,8 @@ void postHandler(webResource *resourceInfo, char *newCredentials)
     char delimiters[] = "&=";
     result = parseCredentials(newCredentials, delimiters, fieldValues, numFields);
 
-    if (result < 0){
+    if (result < 0)
+    {
         resourceInfo->httpCode = HTTP_BAD_REQUEST;
         return;
     }
@@ -280,3 +312,18 @@ void postHandler(webResource *resourceInfo, char *newCredentials)
         resourceInfo->httpCode = HTTP_INTERNAL_SERVER_ERROR;
     }
 }
+
+#ifdef LOG
+void configLogFile(char *logfileName)
+{
+    TRY_NULL(logfile = fopen(logfileName, "w+"));
+}
+
+void printlog(const char *log)
+{
+    pthread_mutex_lock(&log_mutex);
+    fprintf(logfile, "%s", log);
+    fflush(logfile);
+    pthread_mutex_unlock(&log_mutex);
+}
+#endif
