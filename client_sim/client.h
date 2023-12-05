@@ -12,7 +12,7 @@
 #include "../includes/ioHelper.h"
 #include <netinet/tcp.h>
 
-#define REQS_PATH "/home/jf/C-WebServer/client_sim/reqs"
+#define REQS_PATH "client_sim/reqs"
 
 /*
 Separa o cabecalho e o conteudo da resposta HTTP.

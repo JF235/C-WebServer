@@ -77,7 +77,8 @@ int processConnection(int newSock, bool *keepalive)
     // (grande complexidade dentro dessa função)
     webResource req = respondRequest(newSock, cmdList);
 
-    // Fecha a conexão imediatamente, para a requisição não fica pendurada
+    // Fecha a conexão imediatamente em caso de erro
+    // para a requisição não fica pendurada
     if (req.httpCode > 399)
     {
         *keepalive = false;
