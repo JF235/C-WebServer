@@ -218,7 +218,7 @@ int httpRespond(char *response, webResource resourceInfo, http_request req)
             printHeader(response, ".", req);
         else
         {
-            printErrorHeader(response, resourceInfo.httpCode);
+            printErrorHeader(response, resourceInfo.httpCode, "web/notfound.html");
             printResource(response, "web/notfound.html");
         }
         responseSize = strlen(response);
@@ -227,18 +227,19 @@ int httpRespond(char *response, webResource resourceInfo, http_request req)
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
-            printErrorHeader(response, resourceInfo.httpCode);
+            printErrorHeader(response, resourceInfo.httpCode, "web/forbidden.html");
         responseSize = strlen(response);
         break;
     case HTTP_UNAUTHORIZED:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
         else
-            printErrorHeader(response, resourceInfo.httpCode);
+            printErrorHeader(response, resourceInfo.httpCode, "web/unauthorized.html");
         responseSize = strlen(response);
         break;
     default:
-        printErrorHeader(response, resourceInfo.httpCode);
+        printErrorHeader(response, resourceInfo.httpCode, NULL);
+        exit(EXIT_FAILURE);
         responseSize = strlen(response);
         break;
     }
@@ -306,8 +307,15 @@ void printHeader(char *buffer, char *resourcePath, http_request req)
     }
 }
 
-void printErrorHeader(char *buffer, http_code code)
+void printErrorHeader(char *buffer, http_code code, char *errorHtmlFile)
 {
+    struct stat fileInfo;
+    if (stat(errorHtmlFile, &fileInfo) == -1)
+    {
+        perror("Erro ao obter informações do arquivo");
+        exit(EXIT_FAILURE);
+    }
+
     // Obter a data atual.
     time_t now;
     time(&now);
@@ -324,9 +332,10 @@ void printErrorHeader(char *buffer, http_code code)
                  "Server: JFCM Server 0.1\r\n"
                  "WWW-Authenticate: Basic realm=\"(realm)\"\r\n"
                  "Content-Type: text/html\r\n"
+                 "Content-Length: %ld\r\n"
                  "Connection: %s\r\n"
                  "\r\n",
-                 getHttpStatusText(code), dateStr, "close");
+                 getHttpStatusText(code), dateStr, (long)fileInfo.st_size, "close");
     }
     else
     {
@@ -335,9 +344,10 @@ void printErrorHeader(char *buffer, http_code code)
                  "Date: %s\r\n"
                  "Server: JFCM Server 0.1\r\n"
                  "Content-Type: text/html\r\n"
+                 "Content-Length: %ld\r\n"
                  "Connection: %s\r\n"
                  "\r\n",
-                 getHttpStatusText(code), dateStr, "close");
+                 getHttpStatusText(code), dateStr, (long)fileInfo.st_size, "close");
     }
 }
 
