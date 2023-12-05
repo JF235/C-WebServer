@@ -14,7 +14,7 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
     {
         resourceInfo.httpCode = HTTP_NOT_IMPLEMENTED;
     }
-    else if (req == HTTP_GET)
+    else if (req == HTTP_GET || req == HTTP_HEAD)
     {
         // Verifica se o recurso existe e é acessível (Atividade 5)
         resourceInfo = checkWebResource(resource, false);
@@ -49,6 +49,8 @@ webResource httpRequest(char *response, char *resource, char *reqText, char *aut
         {
             resourceInfo.httpCode = HTTP_BAD_REQUEST;
         }
+    } else if (req == HTTP_OPTIONS || req == HTTP_TRACE) {
+        resourceInfo.httpCode = 418;
     }
 
     resourceInfo.bytes = httpRespond(response, resourceInfo, req);
@@ -221,6 +223,8 @@ int httpRespond(char *response, webResource resourceInfo, http_request req)
     case HTTP_NOT_FOUND:
         if (req == HTTP_TRACE || req == HTTP_OPTIONS)
             printHeader(response, ".", req);
+        else if(req == HTTP_HEAD)
+            printErrorHeader(response, resourceInfo.httpCode, "web/notfound.html");
         else
         {
             printErrorHeader(response, resourceInfo.httpCode, "web/notfound.html");
@@ -246,8 +250,11 @@ int httpRespond(char *response, webResource resourceInfo, http_request req)
         responseSize = strlen(response);
         break;
     default:
-        printErrorHeader(response, resourceInfo.httpCode, NULL);
-        exit(EXIT_FAILURE);
+        if (req == HTTP_TRACE || req == HTTP_OPTIONS)
+            printHeader(response, ".", req);
+        else {
+            printErrorHeader(response, resourceInfo.httpCode, NULL);
+        }
         responseSize = strlen(response);
         break;
     }
@@ -293,7 +300,7 @@ void printHeader(char *buffer, char *resourcePath, http_request req)
     {
         snprintf(buffer, MAX_BUFFER_SIZE,
                  "HTTP/1.1 200 OK\r\n"
-                 "Allow: OPTIONS, GET, HEAD, TRACE\r\n"
+                 "Allow: OPTIONS, GET, HEAD, TRACE, POST\r\n"
                  "Date: %s\r\n"
                  "Server: JFCM Server 0.1\r\n"
                  "Connection: %s\r\n"

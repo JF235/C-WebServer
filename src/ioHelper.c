@@ -34,6 +34,7 @@ void file2buffer(FILE *file, char *buff)
 void fileName2buffer(char *filename, char *buff)
 {
     FILE *file;
+    printf("%s\n", filename);
     TRY_NULL( file = fopen(filename, "r") );
     file2buffer(file, buff);
     fclose(file);
