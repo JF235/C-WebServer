@@ -3,9 +3,9 @@
 
 #include "essentials.h"
 
-#define PATH_SIZE_SMALL 512 // Tamanho do caminho de um recurso
+#define PATH_SIZE_SMALL 512   // Tamanho do caminho de um recurso
 #define PATH_SIZE_MEDIUM 1024 // Tamanho do caminho do webspace
-#define PATH_SIZE_BIG 2048 // Tamanho de um caminho webspace + recurso
+#define PATH_SIZE_BIG 2048    // Tamanho de um caminho webspace + recurso
 
 #define WEBSPACE_REL_PATH "/web/meu-webspace"
 
@@ -25,7 +25,7 @@ typedef struct webResource
 } webResource;
 
 /*
-Seta a variável global `webspacePath` que contém o caminho absoluto 
+Seta a variável global `webspacePath` que contém o caminho absoluto
 do webspace.
 */
 void configWebspace(char *webspaceName);
@@ -57,24 +57,24 @@ Retorna `webResource` com código HTTP e caminho do recurso, caso esteja acessí
 */
 webResource checkWebResource(const char *resource, bool authenticated);
 
-/* 
+/*
 Imprime o header de uma resposta associado ao código `code`, recurso `resourcePath` e requisição do tipo `req`.
 */
 void printHeader(char *response, char *resourcePath, http_request req);
 
-/* 
+/*
 Imprime o header de um erro associado ao código `code`.
 */
-void printErrorHeader(char *response, http_code code);
+void printErrorHeader(char *response, http_code code, char *errorHtmlFile);
 
-/* 
+/*
 Faz a leitura do conteúdo presente no recurso indicado pelo caminho `resourcePath` e escreve no buffer response.
 
 Retorna o tamanho em bytes do recurso
 */
 int printResource(char *response, char *resourcePath);
 
-/* 
+/*
 Verifica se o arquivo de caminho `filePath` não contém referências
 relativas de diretório com `.` ou `..`
 */

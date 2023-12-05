@@ -184,7 +184,7 @@ int send_response_overload(int sock)
     char htmlContent[BUFFER_SIZE_BIG] = {0};
 
     // Cabeçalho
-    printErrorHeader(htmlContent, HTTP_SERVICE_UNAVAILABLE);
+    printErrorHeader(htmlContent, HTTP_SERVICE_UNAVAILABLE, "web/overload.html");
 
     // Corpo
     char resourcePath[PATH_SIZE_BIG];
