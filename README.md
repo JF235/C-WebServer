@@ -1,104 +1,39 @@
 # C WebServer
 
-<https://github.com/JF235/C-WebServer>
+## Descrição do sistema
 
-Servidor HTTP desenvolvido para disciplina EA872 FEEC-Unicamp.
+O servidor web desenvolvido, em linguagem C, tem por objetivo demonstrar e motivar a aplicação de conceitos de software básico. Sendo assim, o sistema em sua forma final foi responsável por exercitar conceitos nas áreas de
 
-## Building
+- **compiladores**, com a construção de um parser para interpretação de requisições
+- **sistemas operacionais**, com processos, threads, syscalls
+- **redes**, com sockets, protocolo HTTP, protocolo TCP e documentos RFC
 
-## Pré-requisitos
+Na sua atual forma, o sistema é capaz de atender requisições do tipos GET, HEAD, TRACE, OPTIONS e POST (particularmente, nos formulários de troca de senha). Isso indica que o servidor consegue até mesmo interagir com o browser, onde serão realizados os testes.
 
-Testado e funcionando com:
-- gcc (9.4.0)
-- bison (3.5.1)
-- flex (2.6.4)
+As capacidades efetivas do servidor consistem em: atender múltiplas requisições com threads, manusear um webspace com arquivos protegidos por `.htaccess`, arquivos sem permissão apropriada (de leitura e varredura), responder requisições com diversos tipos de recursos, como HTML, imagens (jpg, png e gif), pdf, texto. Além disso, o servidor implementa uma forma rudimentar de autenticação fazendo uso de arquivos `.htpasswd` com senhas criptografadas.
 
-### Server
+Trata-se, portanto, de um servidor simplificado que não apresenta uma interação com banco de dados, não implementa técnicas robustas de segurança e não busca atingir o maior grau de otimização.
 
-Executar o script shell `./scripts/compile_server.sh`.
+O fluxo de informações do programa pode ser resumido na figura abaixo
 
-**compile_server.sh**
+![fluxo_geral](imgs/fluxo_geral.png)
 
-```bash
-#! /bin/bash
-cd src
-
-# Gerar o parser
-bison -o parserBison.tab.c -d parserBison.y
-flex -o parserFlex.yy.c parserFlex.l 
-
-# Compilar os programas
-gcc *.c -o ../server -lfl -Wall -Wextra -g
-```
-
-### Simulador de Cliente
-
-Executar o script shell `./scripts/compile_client.sh`.
-
-**compile_client.sh**
+Para realizar os testes, será preciso compilar o programa e construir o parser, com ajuda do script `scripts/compile_server.sh`, e ajustar as permissões dos webspaces, a partir dos scripts `configurar_permissoes.sh`.
 
 ```bash
-#! /bin/bash
-gcc -o client ./client_sim/*.c ./src/ioHelper.c -Wall -Wextra
+# Compila o servidor e gera o executável "server" na raiz do projeto
+./scripts/compile_server.sh 
+
+# Configura a permissão do webspace desejado
+cd web/meu-webspace/
+./configura_permissoes.sh
+cd ../../
+
+# Executa o programa com
+# ./server <portNum> <webspace> <logfile> <threads>
+./server 8080 meu-webspace log.txt 4
+
+# Testes podem ser realizados acessando http://localhost:8080/
 ```
 
-## Using
-
-### Server
-
-Basta rodar o executável com o número da porta.
-
-```bash
-./server 8080
-```
-
-Por padrão, a seguinte mensagem deve aparecer (o número 32143 poderá ser diferente).
-
-```
-./server já está aceitando conexões de clientes HTTP em 8080.
-
-[32143] Aguardando conexões... 2 filho(s) livre(s)
-```
-
-### Client
-
-Rodar o comando com ip e porta
-
-```bash
-./client localhost 8080
-```
-
-O programa irá pedir por um comando. Para conectar ao servidor, digite `connect`
-
-```
-Enter command:
-connect
-
-Conectando em localhost:8080
-Conexão concluída (sock = 3)
-```
-
-Em seguida, o programa vai pedir por uma requisição. A requisição deve ser o nome de um arquivo da pasta `./client_sim/reqs` (sem a extensão). Como exemplo
-
-```
-Requisição:
-get_index
-
-=============== CONTEÚDO DA REQUISIÇÃO =============== 
-
-GET / HTTP/1.1
-Host: localhost:5544
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0
-...
-
-
-=============== CONTEÚDO DA RESPOSTA ===============
-
-HTTP/1.1 200 OK
-Date: Tue Oct 17 17:45:46 2023 BRT
-Server: JFCM Server 0.1
-...
-
-<!DOCTYPE html>
-...
-```
+A maioria dos testes levou em conta as seguintes versões dos softwares gcc (9.4.0), bison (3.5.1) e flex (2.6.4).
